@@ -13,21 +13,17 @@ point to a functional DB2 server. The [dbi-crawler] section must point either
 to an sqlite database or a functional mysql server.
 """
 import base64
-from hpssic import CrawlConfig
-from hpssic import CrawlDBI
-from hpssic import cv_sublib
-from hpssic import dbschem
-from hpssic import hpss
-from hpssic import messages as MSG
+import hx.cfg
+import hx.dbi
+import hx.testhelp
+import hx.util
 import os
 import pdb
 import pytest
 import sqlite3
 import socket
 import sys
-from hpssic import testhelp
 import traceback as tb
-from hpssic import util
 import warnings
 
 

@@ -14,8 +14,8 @@ Extensions to python's standard unittest module
     > self.expected() compares an expected and actual value and reports diffs
 
 """
-import CrawlConfig
-import CrawlDBI
+import cfg
+import dbi
 import glob
 import optparse
 import os

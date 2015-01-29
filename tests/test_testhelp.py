@@ -14,11 +14,11 @@ Extensions to python's standard unittest module
     > self.expected() compares an expected and actual value and reports diffs
 
 """
-from hpssic import CrawlConfig
+import hx.cfg
 import pdb
 import sys
 import StringIO
-from hpssic import testhelp
+import hx.testhelp
 import unittest
 
 

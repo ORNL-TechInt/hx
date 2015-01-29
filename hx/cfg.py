@@ -20,7 +20,7 @@ from ConfigParser import NoSectionError
 from ConfigParser import NoOptionError
 from ConfigParser import InterpolationMissingOptionError
 import logging
-import messages as MSG
+import msg
 import os
 import pdb
 import re

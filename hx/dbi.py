@@ -3,8 +3,7 @@ Database interface classes
 """
 import base64
 import contextlib
-import CrawlConfig
-import messages as MSG
+import cfg
 import pdb
 import sqlite3
 import string

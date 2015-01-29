@@ -3,18 +3,16 @@ Test class for CrawlConfig.py
 """
 import contextlib as ctx
 import copy
-from hpssic import CrawlConfig
+import hx.msg
+import hx.testhelp
+import hx.util as U
 import logging
-from hpssic import messages as MSG
 import os
 import pdb
 import pytest
 import re
 import sys
-from hpssic import testhelp
 import time
-from hpssic import util
-from hpssic import util as U
 import warnings
 
 

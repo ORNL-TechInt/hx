@@ -2,19 +2,18 @@
 Tests for util.py
 """
 import copy
-from hpssic import CrawlConfig
+import hx.cfg
 import logging
-from hpssic import messages as MSG
 import os
 import pdb
 import random
 import re
 import stat
 import sys
-from hpssic import testhelp
+import hx.testhelp
 import time
-from hpssic import util
-from hpssic import util as U
+import hx.util
+import hx.util as U
 
 
 # -----------------------------------------------------------------------------
