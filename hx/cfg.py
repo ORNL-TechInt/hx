@@ -317,7 +317,7 @@ def pid_dir():
     the configuration but provide a hard coded default in case it is not.
     """
     cfg = add_config()
-    return cfg.get_d('crawler', 'pid_dir', MSG.default_piddir)
+    return cfg.get_d('crawler', 'pid_dir', msg.default_piddir)
 
 
 # ------------------------------------------------------------------------------
@@ -453,7 +453,7 @@ class CrawlConfig(ConfigParser.ConfigParser):
                 rval = defval
                 # log(str(e) + '; using default value %f' % defval)
             elif defval is not None:
-                raise U.HpssicError(MSG.default_int_float)
+                raise U.HpssicError(msg.default_int_float)
             else:
                 exc.message += " in %s" % self.filename
                 raise
@@ -476,7 +476,7 @@ class CrawlConfig(ConfigParser.ConfigParser):
         Convert a time spec like '10min' to seconds
         """
         if spec.strip()[0] not in string.digits + '.':
-            raise ValueError(MSG.invalid_time_mag_S % spec)
+            raise ValueError(msg.invalid_time_mag_S % spec)
         [(mag, unit)] = re.findall('([\d.]+)\s*(\w*)', spec)
         mult = self.map_time_unit(unit)
         rval = int(float(mag) * mult)
@@ -574,7 +574,7 @@ class CrawlConfig(ConfigParser.ConfigParser):
                              }
                 done = False
             except KeyError:
-                raise ValueError(MSG.invalid_time_unit_S % spec)
+                raise ValueError(msg.invalid_time_unit_S % spec)
 
         return rval
 

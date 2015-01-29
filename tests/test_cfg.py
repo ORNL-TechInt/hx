@@ -757,19 +757,19 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
         """
         self.dbgfunc()
         td = {'punct': {'val': '75%8 fla',
-                        'msg': MSG.too_many_val,
+                        'msg': hx.msg.too_many_val,
                         },
               'nonum': {'val': 'burple',
-                        'msg': MSG.invalid_time_mag_S % 'burple',
+                        'msg': hx.msg.invalid_time_mag_S % 'burple',
                         },
               'alphirst': {'val': 'ab234',
-                           'msg': MSG.invalid_time_mag_S % 'ab234',
+                           'msg': hx.msg.invalid_time_mag_S % 'ab234',
                            },
               'badunit': {'val': '9 yurt',
-                          'msg': MSG.invalid_time_unit_S % 'yurt',
+                          'msg': hx.msg.invalid_time_unit_S % 'yurt',
                           },
               'minus': {'val': '17-8',
-                        'msg': MSG.too_many_val,
+                        'msg': hx.msg.too_many_val,
                         },
               }
         obj = hx.cfg.CrawlConfig.dictor({'crawler': {}, })
@@ -795,7 +795,7 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
         self.expected(47, obj.get_time('crawler', 'strawberry', 47))
         self.expected(17.324, obj.get_time('crawler', 'beeswax', 17.324))
         self.assertRaisesMsg(U.HpssicError,
-                             MSG.default_int_float,
+                             hx.msg.default_int_float,
                              obj.get_time,
                              'crawler',
                              'fiddle',
@@ -812,7 +812,7 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
         self.expected(19, obj.get_time('crawlerfoo', 'frequency', 19))
         self.expected(17.324, obj.get_time('crawlerfoo', 'beeswax', 17.324))
         self.assertRaisesMsg(U.HpssicError,
-                             MSG.default_int_float,
+                             hx.msg.default_int_float,
                              obj.get_time,
                              'crawlerfoo',
                              'fiddle',
