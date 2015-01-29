@@ -407,18 +407,18 @@ class HelpedTestCase(unittest.TestCase):
         Complain if the 'crawler' section is not present.
         """
         if isinstance(cfgdict, dict):
-            cfg = CrawlConfig.CrawlConfig.dictor(cfgdict)
-        elif isinstance(cfgdict, CrawlConfig.CrawlConfig):
-            cfg = cfgdict
+            cfobj = cfg.CrawlConfig.dictor(cfgdict)
+        elif isinstance(cfgdict, cfg.CrawlConfig):
+            cfobj = cfgdict
         else:
             raise StandardError("cfgdict has invalid type %s" % type(cfgdict))
 
-        if 'crawler' not in cfg.sections() and not includee:
+        if 'crawler' not in cfobj.sections() and not includee:
             raise StandardError("section '%s' missing from test config file" %
                                 "crawler")
 
         with open(fname, 'w') as f:
-            cfg.write(f)
+            cfobj.write(f)
 
 
 # -----------------------------------------------------------------------------

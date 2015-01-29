@@ -59,12 +59,12 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         self.dbgfunc()
         cfgfile = self.tmpdir('test_changed.cfg')
 
-        obj = CrawlConfig.CrawlConfig.dictor(self.sample)
+        obj = hx.cfg.CrawlConfig.dictor(self.sample)
         f = open(cfgfile, 'w')
         obj.crawl_write(f)
         f.close()
 
-        changeable = CrawlConfig.CrawlConfig()
+        changeable = hx.cfg.CrawlConfig()
         self.expected('<???>', changeable.filename)
         self.expected(0.0, changeable.loadtime)
         changeable.read(cfgfile)
@@ -78,7 +78,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         Test loading a config object from a dict with CrawlConfig.dictor()
         """
-        cfg = CrawlConfig.CrawlConfig.dictor(self.cdict)
+        cfg = hx.cfg.CrawlConfig.dictor(self.cdict)
         for sect in self.cdict:
             for opt in self.cdict[sect]:
                 self.expected(self.cdict[sect][opt], cfg.get(sect, opt))
@@ -88,7 +88,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         Routines exercised: dictor()
         """
-        obj = CrawlConfig.CrawlConfig.dictor(self.sample)
+        obj = hx.cfg.CrawlConfig.dictor(self.sample)
 
         self.expected('<???>', obj.filename)
         self.expected(0.0, obj.loadtime)
@@ -109,7 +109,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         Routines exercised: __init__(), dump().
         """
-        obj = CrawlConfig.CrawlConfig.dictor(self.sample,
+        obj = hx.cfg.CrawlConfig.dictor(self.sample,
                                              defaults={'goose': 'honk'})
         dumpstr = obj.dump()
 
@@ -130,7 +130,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         Routines exercised: __init__(), dump().
         """
         defaults = {'goose': 'honk'}
-        obj = CrawlConfig.CrawlConfig.dictor(self.sample, defaults=defaults)
+        obj = hx.cfg.CrawlConfig.dictor(self.sample, defaults=defaults)
         dumpstr = obj.dump(with_defaults=True)
 
         self.expected_in("[DEFAULT]", dumpstr)
@@ -153,7 +153,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         StandardError about the file not existing or not being
         readable
         """
-        CrawlConfig.get_config(reset=True, soft=True)
+        hx.cfg.get_config(reset=True, soft=True)
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv('CRAWL_CONF', None)):
             self.write_cfg_file(self.default_cfname, self.cdict)
@@ -161,11 +161,11 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
 
             expmsg = "%s is not readable" % self.default_cfname
             # test get_config with no argument
-            self.assertRaisesMsg(StandardError, expmsg, CrawlConfig.get_config)
+            self.assertRaisesMsg(StandardError, expmsg, hx.cfg.get_config)
 
             # test get_config with empty string argument
             self.assertRaisesMsg(StandardError, expmsg,
-                                 CrawlConfig.get_config, '')
+                                 hx.cfg.get_config, '')
 
     # --------------------------------------------------------------------------
     def test_get_config_def_nosuch(self):
@@ -176,17 +176,17 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         StandardError about the file not existing or not being
         readable
         """
-        CrawlConfig.get_config(reset=True, soft=True)
+        hx.cfg.get_config(reset=True, soft=True)
         with ctx.nested(U.Chdir(self.tmpdir()), U.tmpenv('CRAWL_CONF', None)):
             util.conditional_rm(self.default_cfname)
 
             # test with no argument
             self.assertRaisesMsg(SystemExit, self.nocfg_exp,
-                                 CrawlConfig.get_config)
+                                 hx.cfg.get_config)
 
             # test with empty string argument
             self.assertRaisesMsg(SystemExit, self.nocfg_exp,
-                                 CrawlConfig.get_config, '')
+                                 hx.cfg.get_config, '')
 
     # --------------------------------------------------------------------------
     def test_get_config_def_ok(self):
@@ -196,7 +196,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         EXP: get_config() or get_config('') should load the config
         """
         self.dbgfunc()
-        CrawlConfig.get_config(reset=True, soft=True)
+        hx.cfg.get_config(reset=True, soft=True)
         with ctx.nested(U.Chdir(self.tmpdir()), U.tmpenv('CRAWL_CONF', None)):
             d = copy.deepcopy(self.cdict)
             d['crawler']['filename'] = self.default_cfname
@@ -204,11 +204,11 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             self.write_cfg_file(self.default_cfname, d)
             os.chmod(self.default_cfname, 0644)
 
-            cfg = CrawlConfig.get_config()
+            cfg = hx.cfg.get_config()
             self.expected(self.default_cfname, cfg.get('crawler', 'filename'))
             self.expected(self.default_cfname, cfg.filename)
 
-            cfg = CrawlConfig.get_config('')
+            cfg = hx.cfg.get_config('')
             self.expected(self.default_cfname, cfg.get('crawler', 'filename'))
             self.expected(self.default_cfname, cfg.filename)
 
@@ -221,7 +221,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         EXP: get_config(), get_config('') should throw a StandardError
         about the file not existing or not being readable
         """
-        CrawlConfig.get_config(reset=True, soft=True)
+        hx.cfg.get_config(reset=True, soft=True)
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv('CRAWL_CONF', self.env_cfname)):
             d = copy.deepcopy(self.cdict)
@@ -231,10 +231,10 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
 
             expmsg = "%s is not readable" % self.env_cfname
             self.assertRaisesMsg(StandardError, expmsg,
-                                 CrawlConfig.get_config)
+                                 hx.cfg.get_config)
 
             self.assertRaisesMsg(StandardError, expmsg,
-                                 CrawlConfig.get_config, '')
+                                 hx.cfg.get_config, '')
 
     # --------------------------------------------------------------------------
     def test_get_config_env_nosuch(self):
@@ -244,18 +244,18 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         EXP: get_config(), get_config('') should throw a StandardError
         about the file not existing or not being readable
         """
-        CrawlConfig.get_config(reset=True, soft=True)
+        hx.cfg.get_config(reset=True, soft=True)
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv('CRAWL_CONF', self.env_cfname)):
             util.conditional_rm(self.env_cfname)
 
             self.assertRaisesMsg(SystemExit,
                                  self.nocfg_exp,
-                                 CrawlConfig.get_config)
+                                 hx.cfg.get_config)
 
             self.assertRaisesMsg(SystemExit,
                                  self.nocfg_exp,
-                                 CrawlConfig.get_config,
+                                 hx.cfg.get_config,
                                  '')
 
     # --------------------------------------------------------------------------
@@ -266,7 +266,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
 
         EXP: get_config(), get_config('') should load the config
         """
-        CrawlConfig.get_config(reset=True, soft=True)
+        hx.cfg.get_config(reset=True, soft=True)
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv('CRAWL_CONF', self.env_cfname)):
             d = copy.deepcopy(self.cdict)
@@ -274,10 +274,10 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             self.write_cfg_file(self.env_cfname, d)
             os.chmod(self.env_cfname, 0644)
 
-            cfg = CrawlConfig.get_config()
+            cfg = hx.cfg.get_config()
             self.expected(self.env_cfname, cfg.get('crawler', 'filename'))
 
-            cfg = CrawlConfig.get_config('')
+            cfg = hx.cfg.get_config('')
             self.expected(self.env_cfname, cfg.get('crawler', 'filename'))
 
     # --------------------------------------------------------------------------
@@ -290,7 +290,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
              StandardError about the file not existing or not being
              readable
         """
-        CrawlConfig.get_config(reset=True, soft=True)
+        hx.cfg.get_config(reset=True, soft=True)
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv('CRAWL_CONF', self.env_cfname)):
             d = copy.deepcopy(self.cdict)
@@ -305,7 +305,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
 
             self.assertRaisesMsg(StandardError,
                                  "%s is not readable" % self.exp_cfname,
-                                 CrawlConfig.get_config,
+                                 hx.cfg.get_config,
                                  self.exp_cfname)
 
     # --------------------------------------------------------------------------
@@ -317,7 +317,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         EXP: get_config('explicit.cfg') should throw a StandardError
              about the file not existing or not being readable
         """
-        CrawlConfig.get_config(reset=True, soft=True)
+        hx.cfg.get_config(reset=True, soft=True)
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv('CRAWL_CONF', self.env_cfname)):
             d = copy.deepcopy(self.cdict)
@@ -329,7 +329,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
 
             self.assertRaisesMsg(SystemExit,
                                  self.nocfg_exp,
-                                 CrawlConfig.get_config,
+                                 hx.cfg.get_config,
                                  self.exp_cfname)
 
     # --------------------------------------------------------------------------
@@ -340,7 +340,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
 
         EXP: get_config('explicit.cfg') should load the explicit.cfg
         """
-        CrawlConfig.get_config(reset=True, soft=True)
+        hx.cfg.get_config(reset=True, soft=True)
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv('CRAWL_CONF', self.env_cfname)):
             d = copy.deepcopy(self.cdict)
@@ -353,7 +353,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             self.write_cfg_file(self.exp_cfname, d)
             os.chmod(self.exp_cfname, 0644)
 
-            cfg = CrawlConfig.get_config(self.exp_cfname)
+            cfg = hx.cfg.get_config(self.exp_cfname)
             self.expected(self.exp_cfname, cfg.get('crawler', 'filename'))
 
     # -------------------------------------------------------------------------
@@ -361,7 +361,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         Changing get_d() to support None as a default value
         """
-        obj = CrawlConfig.CrawlConfig.dictor(self.sample)
+        obj = hx.cfg.CrawlConfig.dictor(self.sample)
 
         # section and option are in the config object
         self.expected('quack', obj.get_d('sounds', 'duck', 'foobar'))
@@ -370,7 +370,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         self.expected(None, obj.get_d('sounds', 'dolphin', None))
 
         # section defined, option not, no default -- should throw exception
-        self.assertRaisesMsg(CrawlConfig.NoOptionError,
+        self.assertRaisesMsg(hx.cfg.NoOptionError,
                              "No option '%s' in section: '%s' in <???>" %
                              ("dolphin", "sounds"),
                              obj.get_d,
@@ -381,7 +381,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         self.expected(None, obj.get_d('malename', 'deer', None))
 
         # section not defined, no default -- should throw exception
-        self.assertRaisesMsg(CrawlConfig.NoSectionError,
+        self.assertRaisesMsg(hx.cfg.NoSectionError,
                              "No section: 'malename' in <???>",
                              obj.get_d,
                              'malename',
@@ -398,7 +398,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         If a default value is provided, get_d should not throw NoOptionError or
         NoSectionError
         """
-        obj = CrawlConfig.CrawlConfig.dictor(self.sample)
+        obj = hx.cfg.CrawlConfig.dictor(self.sample)
         # section and option are in the config object
         self.expected('quack', obj.get_d('sounds', 'duck', 'foobar'))
         # section is defined, option is not, should get the default
@@ -414,14 +414,14 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
           1) return the option value if it's defined
           2) otherwise throw a NoOptionError when the option is missing
         """
-        obj = CrawlConfig.CrawlConfig.dictor(self.sample)
         fname = util.my_name()
+        obj = hx.cfg.CrawlConfig.dictor(self.sample)
         obj.filename = fname
         # section and option are in the config object
         self.expected('quack', obj.get_d('sounds', 'duck'))
 
         # section is defined, option is not, should get exception
-        self.assertRaisesMsg(CrawlConfig.NoOptionError,
+        self.assertRaisesMsg(hx.cfg.NoOptionError,
                              "No option '%s' in section: '%s' in %s" %
                              ("dolphin", "sounds", fname),
                              obj.get_d,
@@ -436,12 +436,12 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
           1) return the option value if it's defined
           2) otherwise throw a NoSectionError or NoOptionError
         """
-        obj = CrawlConfig.CrawlConfig.dictor(self.sample)
+        obj = hx.cfg.CrawlConfig.dictor(self.sample)
         # section and option are in the config object
         self.expected('quack', obj.get_d('sounds', 'duck'))
 
         # section not defined, should get NoSectionError
-        self.assertRaisesMsg(CrawlConfig.NoSectionError,
+        self.assertRaisesMsg(hx.cfg.NoSectionError,
                              "No section: 'malename' in <???>",
                              obj.get_d,
                              'malename',
@@ -457,9 +457,9 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         self.dbgfunc()
         # throw away any logger that has been set
         # and get a new one
-        trg_logpath = self.tmpdir('CrawlConfig.log')
+        trg_logpath = self.tmpdir('hx.cfg.log')
         exp_logpath = U.abspath(trg_logpath)
-        actual = CrawlConfig.log(logpath=trg_logpath, close=True)
+        actual = hx.cfg.log(logpath=trg_logpath, close=True)
         self.assertTrue(isinstance(actual, logging.Logger),
                         "Expected logging.Logger, got %s" % (actual))
         self.expected(exp_logpath, actual.handlers[0].baseFilename)
@@ -467,7 +467,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         # now ask for a logger with a different name, with close=False. Since
         # one has already been created, the new name should be ignored and we
         # should get back the one already cached.
-        actual = CrawlConfig.log(logpath=self.tmpdir('util_foobar.log'))
+        actual = hx.cfg.log(logpath=self.tmpdir('util_foobar.log'))
         self.assertTrue(isinstance(actual, logging.Logger),
                         "Expected logging.Logger, got %s" % (actual))
         self.expected(exp_logpath, actual.handlers[0].baseFilename)
@@ -480,16 +480,16 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         should return the cached logger.
         """
         # reset the logger
-        actual = CrawlConfig.log(close=True)
+        actual = hx.cfg.log(close=True)
         self.expected(None, actual)
 
         # now create a logger
-        trg_logpath = self.tmpdir('CrawlConfig.log')
+        trg_logpath = self.tmpdir('hx.cfg.log')
         exp_logpath = U.abspath(trg_logpath)
-        CrawlConfig.log(logpath=trg_logpath)
+        hx.cfg.log(logpath=trg_logpath)
 
         # now retrieving the logger should get the one just set
-        actual = CrawlConfig.log()
+        actual = hx.cfg.log()
         self.assertTrue(isinstance(actual, logging.Logger),
                         "Expected logging.Logger, got %s" % (actual))
         self.expected(exp_logpath, actual.handlers[0].baseFilename)
@@ -505,10 +505,10 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         throwaway = self.tmpdir('throwaway.log')
         abs_throwaway = U.abspath(throwaway)
 
-        override = self.tmpdir('CrawlConfig.log')
+        override = self.tmpdir('hx.cfg.log')
         abs_override = U.abspath(override)
 
-        tmp = CrawlConfig.log(logpath=throwaway, close=True)
+        tmp = hx.cfg.log(logpath=throwaway, close=True)
 
         # verify that it's there with the expected attributes
         self.assertTrue(isinstance(tmp, logging.Logger),
@@ -517,7 +517,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         self.expected(abs_throwaway, tmp.handlers[0].baseFilename)
 
         # now override it
-        actual = CrawlConfig.log(logpath=override, close=True)
+        actual = hx.cfg.log(logpath=override, close=True)
 
         # and verify that it got replaced
         self.assertTrue(isinstance(actual, logging.Logger),
@@ -533,7 +533,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         one.
         """
         exp = None
-        actual = CrawlConfig.log(close=True)
+        actual = hx.cfg.log(close=True)
         self.expected(exp, actual)
 
     # -------------------------------------------------------------------------
@@ -550,11 +550,11 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
                              'logmax': '13'
                              }
                  }
-        c = CrawlConfig.CrawlConfig.dictor(cdict)
+        c = hx.cfg.CrawlConfig.dictor(cdict)
 
         # reset any logger that has been initialized and ask for one that
         # matches the configuration
-        l = CrawlConfig.log(cfg=c, close=True)
+        l = hx.cfg.log(cfg=c, close=True)
 
         # and check that it has the right handler
         self.assertNotEqual(l, None)
@@ -576,8 +576,8 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         self.dbgfunc()
         with ctx.nested(U.Chdir(self.tmpdir()), U.tmpenv('CRAWL_CONF', None)):
             # reset any logger that has been initialized
-            CrawlConfig.log(close=True)
-            CrawlConfig.get_config(reset=True, soft=True)
+            hx.cfg.log(close=True)
+            hx.cfg.get_config(reset=True, soft=True)
 
             logpath = os.path.basename(self.logpath())
             d = copy.deepcopy(self.cdict)
@@ -587,7 +587,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             os.chmod(self.default_cfname, 0644)
 
             # now ask for a default logger
-            l = CrawlConfig.log("frooble test log")
+            l = hx.cfg.log("frooble test log")
 
             # and check that it has the right handler
             self.expected(1, len(l.handlers))
@@ -607,9 +607,9 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         self.dbgfunc()
         with ctx.nested(U.Chdir(self.tmpdir()), U.tmpenv('CRAWL_CONF', None)):
             util.conditional_rm('crawl.cfg')
-            CrawlConfig.get_config(reset=True, soft=True)
-            CrawlConfig.log(close=True)
-            lobj = CrawlConfig.log("This is a test log message")
+            hx.cfg.get_config(reset=True, soft=True)
+            hx.cfg.log(close=True)
+            lobj = hx.cfg.log("This is a test log message")
             self.expected(U.default_logpath(), lobj.handlers[0].stream.name)
 
     # -------------------------------------------------------------------------
@@ -621,11 +621,11 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         self.dbgfunc()
         with ctx.nested(U.Chdir(self.tmpdir()), U.tmpenv('CRAWL_CONF', None)):
             # reset any logger and config that has been initialized
-            CrawlConfig.get_config(reset=True, soft=True)
-            CrawlConfig.log(close=True)
+            hx.cfg.get_config(reset=True, soft=True)
+            hx.cfg.log(close=True)
 
             # now ask for a default logger
-            l = CrawlConfig.log("test log message")
+            l = hx.cfg.log("test log message")
 
             # and check that it has the right handler
             self.expected(1, len(l.handlers))
@@ -640,11 +640,11 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
 
         EXP: Attempts to log to pathname
         """
-        CrawlConfig.log(close=True)
-        logpath = '%s/%s.log' % (self.tmpdir(), util.my_name())
         util.conditional_rm(logpath)
+        hx.cfg.log(close=True)
+        logpath = '%s/%s.log' % (self.tmpdir(), U.my_name())
         self.assertPathNotPresent(logpath)
-        lobj = CrawlConfig.log(logpath=logpath)
+        lobj = hx.cfg.log(logpath=logpath)
         self.assertPathPresent(logpath)
 
     # -------------------------------------------------------------------------
@@ -654,7 +654,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         1024 or '10mb' to 10,000,000
         """
         section = util.my_name()
-        obj = CrawlConfig.CrawlConfig()
+        obj = hx.cfg.CrawlConfig()
         obj.add_section(section)
         obj.set(section, 'tenmb', '10mb')
         obj.set(section, 'thirtymib', '30mib')
@@ -669,7 +669,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         Call get_size() so it throws NoOptionError but provides a default value
         """
         section = util.my_name()
-        obj = CrawlConfig.CrawlConfig()
+        obj = hx.cfg.CrawlConfig()
         obj.add_section(section)
         obj.set(section, 'tenmb', '10mb')
         obj.set(section, 'thirtymib', '30mib')
@@ -683,10 +683,10 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         section = util.my_name()
         fpath = __file__
-        obj = CrawlConfig.CrawlConfig()
+        obj = hx.cfg.CrawlConfig()
         obj.add_section(section)
         obj.filename = fpath
-        self.assertRaisesMsg(CrawlConfig.NoOptionError,
+        self.assertRaisesMsg(hx.cfg.NoOptionError,
                              "No option 'foobar' in section: '%s' in %s" %
                              (section, fpath),
                              obj.get_size,
@@ -700,8 +700,8 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         see that it adds the filename to the error message
         """
         section = util.my_name()
-        obj = CrawlConfig.CrawlConfig()
-        self.assertRaisesMsg(CrawlConfig.NoSectionError,
+        obj = hx.cfg.CrawlConfig()
+        self.assertRaisesMsg(hx.cfg.NoSectionError,
                              "No section: '%s' in <???>" %
                              section,
                              obj.get_size,
@@ -715,7 +715,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         value
         """
         section = util.my_name()
-        obj = CrawlConfig.CrawlConfig()
+        obj = hx.cfg.CrawlConfig()
         obj.add_section(section)
         obj.set(section, 'tenmb', '10mb')
         obj.set(section, 'thirtymib', '30mib')
@@ -726,7 +726,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         Routines exercised: __init__(), get_time().
         """
-        obj = CrawlConfig.CrawlConfig.dictor(self.sample)
+        obj = hx.cfg.CrawlConfig.dictor(self.sample)
         self.expected(3600, obj.get_time('crawler', 'heartbeat'))
         self.expected(300, obj.get_time('crawler', 'frequency'))
 
@@ -736,7 +736,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         Verify that get_time handles floats correctly
         """
         self.dbgfunc()
-        obj = CrawlConfig.CrawlConfig.dictor({'crawler': {'dsec': '10s',
+        obj = hx.cfg.CrawlConfig.dictor({'crawler': {'dsec': '10s',
                                                           'fsec': '5.0 s',
                                                           'nzmin': '.25min',
                                                           'lzhour': '0.1 hr',
@@ -772,7 +772,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
                         'msg': MSG.too_many_val,
                         },
               }
-        obj = CrawlConfig.CrawlConfig.dictor({'crawler': {}, })
+        obj = hx.cfg.CrawlConfig.dictor({'crawler': {}, })
         for k in td:
             obj.set('crawler', k, td[k]['val'])
 
@@ -790,7 +790,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         Call get_time so it throws NoOptionError but provide a default
         """
         self.dbgfunc()
-        obj = CrawlConfig.CrawlConfig.dictor(self.sample)
+        obj = hx.cfg.CrawlConfig.dictor(self.sample)
         self.expected(388, obj.get_time('crawler', 'dumpling', 388))
         self.expected(47, obj.get_time('crawler', 'strawberry', 47))
         self.expected(17.324, obj.get_time('crawler', 'beeswax', 17.324))
@@ -807,7 +807,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         Call get_time so it throws NoSectionError but provide a default
         """
         self.dbgfunc()
-        obj = CrawlConfig.CrawlConfig.dictor(self.sample)
+        obj = hx.cfg.CrawlConfig.dictor(self.sample)
         self.expected(82, obj.get_time('crawlerfoo', 'heartbeat', 82))
         self.expected(19, obj.get_time('crawlerfoo', 'frequency', 19))
         self.expected(17.324, obj.get_time('crawlerfoo', 'beeswax', 17.324))
@@ -825,9 +825,9 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         see that it adds the filename to the error message
         """
         section = util.my_name()
-        obj = CrawlConfig.CrawlConfig()
+        obj = hx.cfg.CrawlConfig()
         obj.add_section(section)
-        self.assertRaisesMsg(CrawlConfig.NoOptionError,
+        self.assertRaisesMsg(hx.cfg.NoOptionError,
                              "No option 'foobar' in section: '%s' in <???>" %
                              section,
                              obj.get_time,
@@ -841,8 +841,8 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         see that it adds the filename to the error message
         """
         section = util.my_name()
-        obj = CrawlConfig.CrawlConfig()
-        self.assertRaisesMsg(CrawlConfig.NoSectionError,
+        obj = hx.cfg.CrawlConfig()
+        self.assertRaisesMsg(hx.cfg.NoSectionError,
                              "No section: '%s' in <???>" %
                              section,
                              obj.get_time,
@@ -854,7 +854,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         Routines exercised: getboolean().
         """
-        obj = CrawlConfig.CrawlConfig()
+        obj = hx.cfg.CrawlConfig()
         obj.add_section('abc')
         obj.set('abc', 'fire', 'True')
         obj.set('abc', 'other', 'False')
@@ -872,9 +872,9 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         d = copy.deepcopy(self.cdict)
         d['crawler']['logpath'] = "%(root)s/fiddle.log"
-        obj = CrawlConfig.CrawlConfig.dictor(d,
-                                             defaults={'root':
-                                                       '/the/root/directory'})
+        obj = hx.cfg.CrawlConfig.dictor(d,
+                                        defaults={'root':
+                                                  '/the/root/directory'})
         exp = "/the/root/directory/fiddle.log"
         actual = obj.get('crawler', 'logpath')
         self.expected(exp, actual)
@@ -886,11 +886,11 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         d = copy.deepcopy(self.cdict)
         d['crawler']['logpath'] = "%(root)s/fiddle.log"
-        obj = CrawlConfig.CrawlConfig.dictor(d,
-                                             defaults={'xroot':
-                                                       '/there/is/no/root'})
+        obj = hx.cfg.CrawlConfig.dictor(d,
+                                        defaults={'xroot':
+                                                  '/there/is/no/root'})
         exp = "/the/root/directory/fiddle.log"
-        self.assertRaisesMsg(CrawlConfig.InterpolationMissingOptionError,
+        self.assertRaisesMsg(hx.cfg.InterpolationMissingOptionError,
                              "Bad value substitution",
                              obj.get, 'crawler', 'logpath')
 
@@ -899,9 +899,9 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         CONDITIONS
         open:  A logger is already open before the test payload is called
-        msg:   A message is passed to CrawlConfig.log()
-        close: In the call to CrawlConfig.log(), close=True
-        ohint: In the call to CrawlConfig.log(), logpath and/or cfg are passed
+        msg:   A message is passed to hx.cfg.log()
+        close: In the call to hx.cfg.log(), close=True
+        ohint: In the call to hx.cfg.log(), logpath and/or cfg are passed
 
         ACTIONS
         C - Close the open logger, if any
@@ -934,12 +934,12 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
-            l = CrawlConfig.log(close=True)
+            hx.cfg.get_config(reset=True, soft=True)
+            l = hx.cfg.log(close=True)
             self.expected(None, l)
 
             # test payload
-            l = CrawlConfig.log()
+            l = hx.cfg.log()
 
             # test verification
             self.validate_logger(None, l)
@@ -956,12 +956,12 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
-            l = CrawlConfig.log(close=True)
+            hx.cfg.get_config(reset=True, soft=True)
+            l = hx.cfg.log(close=True)
             self.expected(None, l)
 
             # test payload
-            l = CrawlConfig.log(logpath=exp_logpath)
+            l = hx.cfg.log(logpath=exp_logpath)
 
             # test verification
             self.validate_logger(exp_logpath, l)
@@ -977,12 +977,12 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
-            l = CrawlConfig.log(close=True)
+            hx.cfg.get_config(reset=True, soft=True)
+            l = hx.cfg.log(close=True)
             self.expected(None, l)
 
             # test payload
-            l = CrawlConfig.log(close=True)
+            l = hx.cfg.log(close=True)
 
             # test verification
             self.validate_logger(None, l)
@@ -998,13 +998,13 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
-            l = CrawlConfig.log(close=True)
+            hx.cfg.get_config(reset=True, soft=True)
+            l = hx.cfg.log(close=True)
             self.expected(None, l)
             exp_logpath = self.tmpdir(U.my_name())
 
             # test payload
-            l = CrawlConfig.log(close=True, logpath=exp_logpath)
+            l = hx.cfg.log(close=True, logpath=exp_logpath)
 
             # test verification
             self.validate_logger(exp_logpath, l)
@@ -1038,8 +1038,8 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
                     os.unlink(filename)
 
             # reset any config and logger already initialized
-            CrawlConfig.get_config(reset=True, soft=True)
-            CrawlConfig.log(close=True)
+            hx.cfg.get_config(reset=True, soft=True)
+            hx.cfg.log(close=True)
 
             # now compose message for logging
             msg = "This is a test log message %s"
@@ -1050,7 +1050,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             exp = (util.my_name() + loc + msg % arg)
 
             # test payload
-            l = CrawlConfig.log(msg, arg)
+            l = hx.cfg.log(msg, arg)
 
             # test verification
             self.validate_logger(exp_logfile,
@@ -1068,15 +1068,15 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
-            l = CrawlConfig.log(close=True)
+            hx.cfg.get_config(reset=True, soft=True)
+            l = hx.cfg.log(close=True)
             self.expected(None, l)
 
             exp_msg = U.rstring()
             exp_logpath = self.tmpdir(U.my_name())
 
             # test payload
-            l = CrawlConfig.log(exp_msg, logpath=exp_logpath)
+            l = hx.cfg.log(exp_msg, logpath=exp_logpath)
 
             # test verification
             self.validate_logger(exp_logpath, l, msg=exp_msg)
@@ -1092,8 +1092,8 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
-            l = CrawlConfig.log(close=True)
+            hx.cfg.get_config(reset=True, soft=True)
+            l = hx.cfg.log(close=True)
             self.expected(None, l)
             d = copy.deepcopy(self.cdict)
             d['crawler']['logpath'] = self.logpath()
@@ -1101,7 +1101,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             exp_msg = U.rstring()
 
             # test payload
-            l = CrawlConfig.log(exp_msg, close=True)
+            l = hx.cfg.log(exp_msg, close=True)
 
             # test verification
             self.validate_logger(self.logpath(), l)
@@ -1117,14 +1117,14 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
-            l = CrawlConfig.log(close=True)
+            hx.cfg.get_config(reset=True, soft=True)
+            l = hx.cfg.log(close=True)
             self.expected(None, l)
             exp_msg = U.rstring()
             exp_logpath = self.tmpdir(U.my_name())
 
             # test payload
-            l = CrawlConfig.log(exp_msg, close=True, logpath=exp_logpath)
+            l = hx.cfg.log(exp_msg, close=True, logpath=exp_logpath)
 
             # test verification
             self.validate_logger(exp_logpath, l)
@@ -1140,13 +1140,13 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
+            hx.cfg.get_config(reset=True, soft=True)
             exp_logpath = self.tmpdir(U.my_name())
-            l = CrawlConfig.log(close=True, logpath=exp_logpath)
+            l = hx.cfg.log(close=True, logpath=exp_logpath)
             self.expected(exp_logpath, l.handlers[0].stream.name)
 
             # test payload
-            l = CrawlConfig.log()
+            l = hx.cfg.log()
 
             # test verification
             self.validate_logger(exp_logpath, l)
@@ -1162,16 +1162,16 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
+            hx.cfg.get_config(reset=True, soft=True)
             exp_logpath = self.tmpdir(U.my_name())
             ign_logpath = self.logpath()
             U.conditional_rm(ign_logpath)
 
-            l = CrawlConfig.log(close=True, logpath=exp_logpath)
+            l = hx.cfg.log(close=True, logpath=exp_logpath)
             self.validate_logger(exp_logpath, l)
 
             # test payload
-            l = CrawlConfig.log(logpath=ign_logpath)
+            l = hx.cfg.log(logpath=ign_logpath)
 
             # test verification
             self.validate_logger(exp_logpath, l)
@@ -1188,13 +1188,13 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
+            hx.cfg.get_config(reset=True, soft=True)
             exp_logpath = self.tmpdir(U.my_name())
-            l = CrawlConfig.log(close=True, logpath=exp_logpath)
+            l = hx.cfg.log(close=True, logpath=exp_logpath)
             self.validate_logger(exp_logpath, l)
 
             # test payload
-            l = CrawlConfig.log(close=True)
+            l = hx.cfg.log(close=True)
 
             # test verification
             self.validate_logger(None, l)
@@ -1210,13 +1210,13 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
+            hx.cfg.get_config(reset=True, soft=True)
             exp_logpath = self.tmpdir(U.my_name())
-            l = CrawlConfig.log(close=True, logpath=self.logpath())
+            l = hx.cfg.log(close=True, logpath=self.logpath())
             self.validate_logger(self.logpath(), l)
 
             # test payload
-            l = CrawlConfig.log(close=True, logpath=exp_logpath)
+            l = hx.cfg.log(close=True, logpath=exp_logpath)
 
             # test verification
             self.validate_logger(exp_logpath, l)
@@ -1232,14 +1232,14 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
+            hx.cfg.get_config(reset=True, soft=True)
             exp_logpath = self.tmpdir(U.my_name())
-            l = CrawlConfig.log(close=True, logpath=exp_logpath)
+            l = hx.cfg.log(close=True, logpath=exp_logpath)
             self.validate_logger(exp_logpath, l)
             exp_msg = U.rstring()
 
             # test payload
-            l = CrawlConfig.log(exp_msg)
+            l = hx.cfg.log(exp_msg)
 
             # test verification
             self.validate_logger(exp_logpath, l, msg=exp_msg)
@@ -1259,15 +1259,15 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
+            hx.cfg.get_config(reset=True, soft=True)
             U.conditional_rm(self.logpath())
             exp_logpath = self.tmpdir(U.my_name())
-            l = CrawlConfig.log(close=True, logpath=exp_logpath)
+            l = hx.cfg.log(close=True, logpath=exp_logpath)
             self.validate_logger(exp_logpath, l)
             exp_msg = U.rstring()
 
             # test payload
-            l = CrawlConfig.log(exp_msg, logpath=self.logpath())
+            l = hx.cfg.log(exp_msg, logpath=self.logpath())
 
             # test verification
             self.validate_logger(exp_logpath, l, msg=exp_msg)
@@ -1292,13 +1292,13 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", exp_logpath)):
-            CrawlConfig.get_config(reset=True, soft=True)
-            l = CrawlConfig.log(close=True, logpath=self.logpath())
+            hx.cfg.get_config(reset=True, soft=True)
+            l = hx.cfg.log(close=True, logpath=self.logpath())
             self.validate_logger(self.logpath(), l)
             exp_msg = U.rstring()
 
             # test payload
-            l = CrawlConfig.log(exp_msg, close=True)
+            l = hx.cfg.log(exp_msg, close=True)
 
             # test verification
             self.validate_logger(exp_logpath, l)
@@ -1319,13 +1319,13 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv("CRAWL_CONF", None),
                         U.tmpenv("CRAWL_LOG", None)):
-            CrawlConfig.get_config(reset=True, soft=True)
-            l = CrawlConfig.log(close=True, logpath=self.logpath())
+            hx.cfg.get_config(reset=True, soft=True)
+            l = hx.cfg.log(close=True, logpath=self.logpath())
             self.validate_logger(self.logpath(), l)
             exp_msg = U.rstring()
 
             # test payload
-            l = CrawlConfig.log(exp_msg, close=True, logpath=exp_logpath)
+            l = hx.cfg.log(exp_msg, close=True, logpath=exp_logpath)
 
             # test verification
             self.validate_logger(exp_logpath, l)
@@ -1366,11 +1366,11 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
                               'logsize': '500',
                               'archive_dir': archdir,
                               'logmax': '10'}}
-        lcfg = CrawlConfig.CrawlConfig.dictor(lcfg_d)
-        CrawlConfig.log(cfg=lcfg, close=True)
+        lcfg = hx.cfg.CrawlConfig.dictor(lcfg_d)
+        hx.cfg.log(cfg=lcfg, close=True)
         lmsg = "This is a test " + "-" * 35
         for x in range(0, 5):
-            CrawlConfig.log(lmsg)
+            hx.cfg.log(lmsg)
 
         self.assertTrue(os.path.isdir(archdir),
                         "Expected directory %s to be created" % archdir)
@@ -1394,11 +1394,11 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         lcfg_d = {'crawler': {'logpath': logpath,
                               'logsize': '500',
                               'logmax': '10'}}
-        lcfg = CrawlConfig.CrawlConfig.dictor(lcfg_d)
-        CrawlConfig.log(cfg=lcfg, close=True)
+        lcfg = hx.cfg.CrawlConfig.dictor(lcfg_d)
+        hx.cfg.log(cfg=lcfg, close=True)
         lmsg = "This is a test " + "-" * 35
         for x in range(0, 5):
-            CrawlConfig.log(lmsg)
+            hx.cfg.log(lmsg)
 
         self.assertTrue(os.path.isfile(logpath),
                         "Expected file %s to exist" % logpath)
@@ -1411,8 +1411,8 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         Test a log message with multiple formatters
         """
         fpath = self.tmpdir("%s.log" % util.my_name())
-        CrawlConfig.log(close=True)
-        log = CrawlConfig.log(logpath=fpath)
+        hx.cfg.log(close=True)
+        log = hx.cfg.log(logpath=fpath)
 
         # multiple % formatters in first arg
         a1 = "Here's a string: '%s'; here's an int: %d; here's a float: %f"
@@ -1422,8 +1422,8 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         exp = (util.my_name() +
                "(%s:%d): " % (util.filename(), util.lineno()+2) +
                a1 % (a2, a3, a4))
-        CrawlConfig.log(a1, a2, a3, a4)
         result = util.contents(fpath)
+        hx.cfg.log(a1, a2, a3, a4)
         self.assertTrue(exp in result,
                         "Expected '%s' in %s" %
                         (exp, util.line_quote(result)))
@@ -1434,7 +1434,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         Test a log message with just a single formatter
         """
         fpath = self.tmpdir("%s.log" % util.my_name())
-        CrawlConfig.log(logpath=fpath, close=True)
+        hx.cfg.log(logpath=fpath, close=True)
 
         # 1 % formatter in first arg
         a1 = "This has a formatter and one argument: %s"
@@ -1442,8 +1442,8 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         exp = (util.my_name() +
                "(%s:%d): " % (util.filename(), util.lineno()+2) +
                a1 % a2)
-        CrawlConfig.log(a1, a2)
         result = util.contents(fpath)
+        hx.cfg.log(a1, a2)
         self.assertTrue(exp in result,
                         "Expected '%s' in %s" %
                         (exp, util.line_quote(result)))
@@ -1471,11 +1471,11 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             U.conditional_rm(exp_logpath)
             self.assertPathNotPresent(exp_logpath)
 
-            CrawlConfig.get_config(reset=True, soft=True)
+            hx.cfg.get_config(reset=True, soft=True)
             d = copy.deepcopy(self.cdict)
             d['crawler']['logpath'] = self.logpath()
             self.write_cfg_file(self.default_cfname, d)
-            x = CrawlConfig.new_logger()
+            x = hx.cfg.new_logger()
             self.expected(1, len(x.handlers))
             self.expected(exp_logpath, x.handlers[0].stream.name)
             self.assertPathPresent(exp_logpath)
@@ -1504,14 +1504,14 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             U.conditional_rm(self.logpath())
             self.assertPathNotPresent(self.logpath())
 
-            CrawlConfig.get_config(reset=True, soft=True)
+            hx.cfg.get_config(reset=True, soft=True)
             self.write_cfg_file(self.default_cfname, self.cdict)
 
             d = copy.deepcopy(self.cdict)
             d['crawler']['logpath'] = exp_logpath
-            xcfg = CrawlConfig.CrawlConfig.dictor(d)
+            xcfg = hx.cfg.CrawlConfig.dictor(d)
 
-            x = CrawlConfig.new_logger(cfg=xcfg)
+            x = hx.cfg.new_logger(cfg=xcfg)
             self.expected(1, len(x.handlers))
             self.expected(exp_logpath, x.handlers[0].stream.name)
             self.assertPathPresent(exp_logpath)
@@ -1543,13 +1543,13 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             U.conditional_rm(exp_logpath)
             self.assertPathNotPresent(exp_logpath)
 
-            CrawlConfig.get_config(reset=True, soft=True)
+            hx.cfg.get_config(reset=True, soft=True)
             self.write_cfg_file(self.default_cfname, self.cdict)
 
             d = copy.deepcopy(self.cdict)
-            xcfg = CrawlConfig.CrawlConfig.dictor(d)
+            xcfg = hx.cfg.CrawlConfig.dictor(d)
 
-            x = CrawlConfig.new_logger(cfg=xcfg)
+            x = hx.cfg.new_logger(cfg=xcfg)
             self.expected(1, len(x.handlers))
             self.expected(exp_logpath, x.handlers[0].stream.name)
             self.assertPathPresent(exp_logpath)
@@ -1578,10 +1578,10 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             U.conditional_rm(exp_logpath)
             self.assertPathNotPresent(exp_logpath)
 
-            CrawlConfig.get_config(reset=True, soft=True)
+            hx.cfg.get_config(reset=True, soft=True)
             self.write_cfg_file(self.default_cfname, self.cdict)
 
-            x = CrawlConfig.new_logger()
+            x = hx.cfg.new_logger()
             self.expected(1, len(x.handlers))
             self.expected(exp_logpath, x.handlers[0].stream.name)
             self.assertPathPresent(exp_logpath)
@@ -1610,14 +1610,14 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             U.conditional_rm(exp_logpath)
             self.assertPathNotPresent(exp_logpath)
 
-            CrawlConfig.get_config(reset=True, soft=True)
+            hx.cfg.get_config(reset=True, soft=True)
             self.write_cfg_file(self.default_cfname, self.cdict)
 
             d = copy.deepcopy(self.cdict)
             d['crawler']['logpath'] = exp_logpath
-            xcfg = CrawlConfig.CrawlConfig.dictor(d)
+            xcfg = hx.cfg.CrawlConfig.dictor(d)
 
-            x = CrawlConfig.new_logger(cfg=xcfg)
+            x = hx.cfg.new_logger(cfg=xcfg)
             self.expected(1, len(x.handlers))
             self.expected(exp_logpath, x.handlers[0].stream.name)
             self.assertPathPresent(exp_logpath)
@@ -1647,7 +1647,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             U.conditional_rm(exp_logpath)
             self.assertPathNotPresent(exp_logpath)
 
-            x = CrawlConfig.new_logger(logpath=exp_logpath)
+            x = hx.cfg.new_logger(logpath=exp_logpath)
             self.expected(1, len(x.handlers))
             self.expected(exp_logpath, x.handlers[0].stream.name)
             self.assertPathPresent(exp_logpath)
@@ -1677,9 +1677,9 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             U.conditional_rm(exp_logpath)
             self.assertPathNotPresent(exp_logpath)
 
-            xcfg = CrawlConfig.CrawlConfig.dictor(self.cdict)
+            xcfg = hx.cfg.CrawlConfig.dictor(self.cdict)
 
-            x = CrawlConfig.new_logger(logpath=exp_logpath, cfg=xcfg)
+            x = hx.cfg.new_logger(logpath=exp_logpath, cfg=xcfg)
             self.expected(1, len(x.handlers))
             self.expected(exp_logpath, x.handlers[0].stream.name)
             self.assertPathPresent(exp_logpath)
@@ -1709,7 +1709,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             U.conditional_rm(exp_logpath)
             self.assertPathNotPresent(exp_logpath)
 
-            x = CrawlConfig.new_logger(logpath=exp_logpath)
+            x = hx.cfg.new_logger(logpath=exp_logpath)
             self.expected(1, len(x.handlers))
             self.expected(exp_logpath, x.handlers[0].stream.name)
             self.assertPathPresent(exp_logpath)
@@ -1739,9 +1739,9 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             U.conditional_rm(exp_logpath)
             self.assertPathNotPresent(exp_logpath)
 
-            xcfg = CrawlConfig.CrawlConfig.dictor(self.cdict)
+            xcfg = hx.cfg.CrawlConfig.dictor(self.cdict)
 
-            x = CrawlConfig.new_logger(logpath=exp_logpath, cfg=xcfg)
+            x = hx.cfg.new_logger(logpath=exp_logpath, cfg=xcfg)
             self.expected(1, len(x.handlers))
             self.expected(exp_logpath, x.handlers[0].stream.name)
             self.assertPathPresent(exp_logpath)
@@ -1750,31 +1750,31 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
     # -------------------------------------------------------------------------
     def test_log_simple(self):
         """
-        Tests for routine CrawlConfig.log():
+        Tests for routine hx.cfg.log():
          - simple string in first argument
          - 1 % formatter in first arg
          - multiple % formatters in first arg
          - too many % formatters for args
          - too many args for % formatters
         """
-        fpath = self.tmpdir("%s.log" % util.my_name())
-        CrawlConfig.log(logpath=fpath, close=True)
+        fpath = self.tmpdir("%s.log" % U.my_name())
+        hx.cfg.log(logpath=fpath, close=True)
 
         # simple string in first arg
-        exp = util.my_name() + ": " + "This is a simple string"
-        CrawlConfig.log(exp)
-        result = util.contents(fpath)
+        exp = U.my_name() + ": " + "This is a simple string"
+        hx.cfg.log(exp)
+        result = U.contents(fpath)
         self.assertTrue(exp in result,
                         "Expected '%s' in %s" %
-                        (exp, util.line_quote(result)))
+                        (exp, U.line_quote(result)))
 
     # -------------------------------------------------------------------------
     def test_log_toomany_fmt(self):
         """
         Too many formatters for the arguments should raise an exception
         """
-        fpath = self.tmpdir("%s.log" % util.my_name())
-        log = CrawlConfig.log(logpath=fpath, close=True)
+        fpath = self.tmpdir("%s.log" % U.my_name())
+        log = hx.cfg.log(logpath=fpath, close=True)
 
         # multiple % formatters in first arg
 
@@ -1783,27 +1783,27 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
                 "zebedee",
                 94,
                 23.12348293402]
-        exp = util.my_name() + ": " + argl[0] % (argl[1],
+        exp = U.my_name() + ": " + argl[0] % (argl[1],
                                                  argl[2],
                                                  argl[3],
                                                  17.9)
         self.assertRaisesMsg(TypeError,
                              "not enough arguments for format string",
-                             CrawlConfig.log,
+                             hx.cfg.log,
                              *argl)
 
-        result = util.contents(fpath)
+        result = U.contents(fpath)
         self.assertFalse(exp in result,
                          "Not expecting '%s' in %s" %
-                         (exp, util.line_quote(result)))
+                         (exp, U.line_quote(result)))
 
     # -------------------------------------------------------------------------
     def test_log_toomany_args(self):
         """
         Too many arguments for the formatters should raise an exception
         """
-        fpath = self.tmpdir("%s.log" % util.my_name())
-        log = CrawlConfig.log(logpath=fpath, close=True)
+        fpath = self.tmpdir("%s.log" % U.my_name())
+        log = hx.cfg.log(logpath=fpath, close=True)
 
         # multiple % formatters in first arg
         argl = ["Here's a string: '%s'; here's an int: %d; here's a float: %f",
@@ -1815,7 +1815,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         exc = "not all arguments converted during string formatting"
         self.assertRaisesMsg(TypeError,
                              exc,
-                             CrawlConfig.log,
+                             hx.cfg.log,
                              *argl)
 
         result = util.contents(fpath)
@@ -1828,7 +1828,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         Routines exercised: __init__(), map_time_unit().
         """
-        obj = CrawlConfig.CrawlConfig()
+        obj = hx.cfg.CrawlConfig()
         self.expected(1, obj.map_time_unit(''))
         self.expected(1, obj.map_time_unit('s'))
         self.expected(1, obj.map_time_unit('sec'))
@@ -1856,25 +1856,25 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
     # --------------------------------------------------------------------------
     def test_piddir_in_cfg(self):
         """
-        Test CrawlConfig.pid_dir() with option 'pid_dir' in the config
+        Test hx.cfg.pid_dir() with option 'pid_dir' in the config
         """
         xdict = copy.deepcopy(self.cdict)
         exp = self.tmpdir('test_piddir')
         xdict['crawler']['pid_dir'] = exp
-        cfg = CrawlConfig.add_config(close=True, dct=xdict)
-        self.expected(exp, CrawlConfig.pid_dir())
+        cfg = hx.cfg.add_config(close=True, dct=xdict)
+        self.expected(exp, hx.cfg.pid_dir())
 
     # --------------------------------------------------------------------------
     def test_piddir_nin_cfg(self):
         """
-        Test CrawlConfig.pid_dir() with option 'pid_dir' not in the config
+        Test hx.cfg.pid_dir() with option 'pid_dir' not in the config
         """
         xdict = copy.deepcopy(self.cdict)
-        exp = MSG.default_piddir
+        exp = hx.msg.default_piddir
         if 'pid_dir' in xdict['crawler']:
             del xdict['crawler']['pid_dir']
-        cfg = CrawlConfig.add_config(close=True, dct=xdict)
-        self.expected(exp, CrawlConfig.pid_dir())
+        cfg = hx.cfg.add_config(close=True, dct=xdict)
+        self.expected(exp, hx.cfg.pid_dir())
 
     # --------------------------------------------------------------------------
     def test_quiet_time_bound_mt(self):
@@ -1883,7 +1883,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         ldict = copy.deepcopy(self.cdict)
         ldict['crawler']['quiet_time'] = "19:17-19:17"
-        cfg = CrawlConfig.CrawlConfig.dictor(ldict)
+        cfg = hx.cfg.CrawlConfig.dictor(ldict)
 
         # front of day
         self.try_qt_spec(cfg, False, "2014.0331 23:59:59")
@@ -1907,7 +1907,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         ldict = copy.deepcopy(self.cdict)
         ldict['crawler']['quiet_time'] = "14:00-19:00"
-        cfg = CrawlConfig.CrawlConfig.dictor(ldict)
+        cfg = hx.cfg.CrawlConfig.dictor(ldict)
 
         # non-interval time
         self.try_qt_spec(cfg, False, "2014.0101 11:19:58")
@@ -1932,7 +1932,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         ldict = copy.deepcopy(self.cdict)
         ldict['crawler']['quiet_time'] = "19:00-03:00"
-        cfg = CrawlConfig.CrawlConfig.dictor(ldict)
+        cfg = hx.cfg.CrawlConfig.dictor(ldict)
 
         # front of day
         self.try_qt_spec(cfg, True, "2014.0331 23:59:59")
@@ -1970,7 +1970,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         ldict = copy.deepcopy(self.cdict)
         ldict['crawler']['quiet_time'] = "2013.0428,fri"
-        cfg = CrawlConfig.CrawlConfig.dictor(ldict)
+        cfg = hx.cfg.CrawlConfig.dictor(ldict)
 
         # leading edge of date
         self.try_qt_spec(cfg, False, "2013.0427 23:59:59")
@@ -2008,7 +2008,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         ldict = copy.deepcopy(self.cdict)
         ldict['crawler']['quiet_time'] = "2014.0401"
-        cfg = CrawlConfig.CrawlConfig.dictor(ldict)
+        cfg = hx.cfg.CrawlConfig.dictor(ldict)
 
         # before date
         self.try_qt_spec(cfg, False, "2014.0331 23:00:00")
@@ -2034,7 +2034,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         When the config item is missing, quiet_time() should always return
         False
         """
-        cfg = CrawlConfig.CrawlConfig.dictor(self.cdict)
+        cfg = hx.cfg.CrawlConfig.dictor(self.cdict)
 
         # before date
         self.try_qt_spec(cfg, False, "2014.0331 23:00:00")
@@ -2061,7 +2061,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         ldict = copy.deepcopy(self.cdict)
         ldict['crawler']['quiet_time'] = "2014.0401, 17:00 - 23:00"
-        cfg = CrawlConfig.CrawlConfig.dictor(ldict)
+        cfg = hx.cfg.CrawlConfig.dictor(ldict)
 
         # day before, before interval
         self.try_qt_spec(cfg, False, "2014.0331 03:07:18")
@@ -2121,7 +2121,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         ldict = copy.deepcopy(self.cdict)
         ldict['crawler']['quiet_time'] = "14:00-19:00,2012.0117,Wednes"
-        cfg = CrawlConfig.CrawlConfig.dictor(ldict)
+        cfg = hx.cfg.CrawlConfig.dictor(ldict)
 
         # before any of them, on Monday
         self.try_qt_spec(cfg, False, "2012.0116 11:38:02")
@@ -2170,7 +2170,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         ldict = copy.deepcopy(self.cdict)
         ldict['crawler']['quiet_time'] = "14:00-19:00,sat,Wednes"
-        cfg = CrawlConfig.CrawlConfig.dictor(ldict)
+        cfg = hx.cfg.CrawlConfig.dictor(ldict)
 
         # 2014.0301 is a saturday -- all times quiet
         self.try_qt_spec(cfg, True, "2014.0301 13:59:59")
@@ -2199,7 +2199,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         ldict = copy.deepcopy(self.cdict)
         ldict['crawler']['quiet_time'] = "19:00-8:15,2015.0217"
-        cfg = CrawlConfig.CrawlConfig.dictor(ldict)
+        cfg = hx.cfg.CrawlConfig.dictor(ldict)
 
         # in the early interval the day before
         self.try_qt_spec(cfg, True, "2015.0216 08:00:00")
@@ -2255,7 +2255,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         ldict = copy.deepcopy(self.cdict)
         ldict['crawler']['quiet_time'] = "14:00-19:00,sat"
-        cfg = CrawlConfig.CrawlConfig.dictor(ldict)
+        cfg = hx.cfg.CrawlConfig.dictor(ldict)
 
         # 2014.0301 is a saturday
         self.try_qt_spec(cfg, True, "2014.0301 13:59:59")
@@ -2289,7 +2289,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         ldict = copy.deepcopy(self.cdict)
         ldict['crawler']['quiet_time'] = "sat, sunday, 20:17 -06:45"
-        cfg = CrawlConfig.CrawlConfig.dictor(ldict)
+        cfg = hx.cfg.CrawlConfig.dictor(ldict)
 
         # Friday before 20:17
         self.try_qt_spec(cfg, False, "2012.0224 20:00:05")
@@ -2355,7 +2355,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         ldict = copy.deepcopy(self.cdict)
         ldict['crawler']['quiet_time'] = "Wednes"
-        cfg = CrawlConfig.CrawlConfig.dictor(ldict)
+        cfg = hx.cfg.CrawlConfig.dictor(ldict)
 
         # 2014.0305 is a wednesday -- beginning of day
         self.try_qt_spec(cfg, False, "2014.0304 23:59:59")
@@ -2397,7 +2397,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         self.write_cfg_file(cfname_inc1, inc1_d)
         self.write_cfg_file(cfname_inc2, inc2_d, includee=True)
 
-        obj = CrawlConfig.CrawlConfig()
+        obj = hx.cfg.CrawlConfig()
         obj.read(cfname_root)
 
         root_d['crawler']['logmax'] = '17'
@@ -2432,7 +2432,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         self.write_cfg_file(cfname_root, root_d)
         self.write_cfg_file(cfname_inc1, inc1_d)
 
-        obj = CrawlConfig.CrawlConfig()
+        obj = hx.cfg.CrawlConfig()
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             # this read should raise a warning about some config file(s) not
@@ -2459,9 +2459,9 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
     # --------------------------------------------------------------------------
     def test_root_absolute(self):
         """
-        Verify that root gets absolutized when the CrawlConfig is initialized
+        Verify that root gets absolutized when the hx.cfg is initialized
         """
-        new = CrawlConfig.CrawlConfig({'root': '.'})
+        new = hx.cfg.CrawlConfig({'root': '.'})
         self.expected(os.getcwd(), new.get('DEFAULT', 'root'))
         new.add_section('crawler')
         new.set('crawler', 'logpath', '%(root)s/xyzzy.log')
@@ -2475,7 +2475,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         try:
             qtspec = cfg.get('crawler', 'quiet_time')
-        except CrawlConfig.NoOptionError:
+        except hx.cfg.NoOptionError:
             qtspec = "<empty>"
 
         actual = cfg.quiet_time(util.epoch(tval))
