@@ -543,8 +543,8 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
         for log file name, log file size, and max log files on disk. Verify
         that the resulting logger has the correct parameters.
         """
-        cfname = self.tmpdir("%s.cfg" % util.my_name())
-        lfname = self.tmpdir("%s.log" % util.my_name())
+        cfname = self.tmpdir("%s.cfg" % U.my_name())
+        lfname = self.tmpdir("%s.log" % U.my_name())
         cdict = {'crawler': {'logpath': lfname,
                              'logsize': '17mb',
                              'logmax': '13'
@@ -640,9 +640,9 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
 
         EXP: Attempts to log to pathname
         """
-        U.conditional_rm(logpath)
         hx.cfg.log(close=True)
         logpath = '%s/%s.log' % (self.tmpdir(), U.my_name())
+        U.conditional_rm(logpath)
         self.assertPathNotPresent(logpath)
         lobj = hx.cfg.log(logpath=logpath)
         self.assertPathPresent(logpath)
@@ -1433,6 +1433,7 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
         """
         Test a log message with just a single formatter
         """
+        self.dbgfunc()
         fpath = self.tmpdir("%s.log" % U.my_name())
         hx.cfg.log(logpath=fpath, close=True)
 
@@ -1442,8 +1443,8 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
         exp = (U.my_name() +
                "(%s:%d): " % (U.filename(), U.lineno()+2) +
                a1 % a2)
-        result = U.contents(fpath)
         hx.cfg.log(a1, a2)
+        result = U.contents(fpath)
         self.assertTrue(exp in result,
                         "Expected '%s' in %s" %
                         (exp, U.line_quote(result)))
@@ -1811,17 +1812,17 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
                 94,
                 23.12348293402,
                 "friddle"]
-        exp = (util.my_name() + ": " + argl[0] % (argl[1], argl[2], argl[3]))
+        exp = (U.my_name() + ": " + argl[0] % (argl[1], argl[2], argl[3]))
         exc = "not all arguments converted during string formatting"
         self.assertRaisesMsg(TypeError,
                              exc,
                              hx.cfg.log,
                              *argl)
 
-        result = util.contents(fpath)
+        result = U.contents(fpath)
         self.assertFalse(exp in result,
                          "Expected '%s' in %s" %
-                         (exp, util.line_quote(result)))
+                         (exp, U.line_quote(result)))
 
     # -------------------------------------------------------------------------
     def test_map_time_unit(self):
