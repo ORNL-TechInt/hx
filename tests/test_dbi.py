@@ -97,7 +97,7 @@ def make_tcfg(dbtype, obj):
 
 
 # -----------------------------------------------------------------------------
-class DBITestRoot(testhelp.HelpedTestCase):
+class DBITestRoot(hx.testhelp.HelpedTestCase):
     # -------------------------------------------------------------------------
     def setup_select(self, table_name):
         """

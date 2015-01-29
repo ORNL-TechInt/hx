@@ -17,7 +17,7 @@ import hx.util as U
 
 
 # -----------------------------------------------------------------------------
-class UtilTest(testhelp.HelpedTestCase):
+class UtilTest(hx.testhelp.HelpedTestCase):
     """
     Tests for util.py
     """

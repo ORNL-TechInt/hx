@@ -23,8 +23,7 @@ import unittest
 
 
 # -----------------------------------------------------------------------------
-# class TesthelpTest(unittest.TestCase):
-class TesthelpTest(testhelp.HelpedTestCase):
+class TesthelpTest(hx.testhelp.HelpedTestCase):
     """
     Tests for testhelp code.
     """
@@ -39,11 +38,11 @@ class TesthelpTest(testhelp.HelpedTestCase):
         all = ['TesthelpTest.test_all_tests',
                'TesthelpTest.test_list_tests',
                'TesthelpTest.test_expected_vs_got'].sort()
-        l = testhelp.all_tests('__main__').sort()
+        l = hx.testhelp.all_tests('__main__').sort()
         self.expected(all, l)
-        l = testhelp.all_tests('__main__', 'no such tests')
+        l = hx.testhelp.all_tests('__main__', 'no such tests')
         self.expected([], l)
-        l = testhelp.all_tests('__main__', 'helpTest').sort()
+        l = hx.testhelp.all_tests('__main__', 'helpTest').sort()
         self.expected(all, l)
 
     # -------------------------------------------------------------------------
@@ -78,7 +77,7 @@ class TesthelpTest(testhelp.HelpedTestCase):
         s = StringIO.StringIO()
         save_stdout = sys.stdout
         sys.stdout = s
-        testhelp.list_tests(args, final, testlist)
+        hx.testhelp.list_tests(args, final, testlist)
         sys.stdout = save_stdout
 
         r = s.getvalue()
@@ -105,7 +104,7 @@ class TesthelpTest(testhelp.HelpedTestCase):
         Verify that a HelpedTestCase object has the expected attributes
         """
         self.dbgfunc()
-        q = testhelp.HelpedTestCase(methodName='noop')
+        q = hx.testhelp.HelpedTestCase(methodName='noop')
         for attr in ['expected', 'expected_in', 'write_cfg_file']:
             self.assertTrue(hasattr(q, attr),
                             "Expected %s to have attr %s" % (q, attr))

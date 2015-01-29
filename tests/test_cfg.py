@@ -17,7 +17,7 @@ import warnings
 
 
 # -----------------------------------------------------------------------------
-class CrawlConfigTest(testhelp.HelpedTestCase):
+class cfg_Test(hx.testhelp.HelpedTestCase):
     """
     Test class for CrawlConfig
     """
