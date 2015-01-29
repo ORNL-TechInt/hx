@@ -178,7 +178,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         hx.cfg.get_config(reset=True, soft=True)
         with ctx.nested(U.Chdir(self.tmpdir()), U.tmpenv('CRAWL_CONF', None)):
-            util.conditional_rm(self.default_cfname)
+            U.conditional_rm(self.default_cfname)
 
             # test with no argument
             self.assertRaisesMsg(SystemExit, self.nocfg_exp,
@@ -247,7 +247,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         hx.cfg.get_config(reset=True, soft=True)
         with ctx.nested(U.Chdir(self.tmpdir()),
                         U.tmpenv('CRAWL_CONF', self.env_cfname)):
-            util.conditional_rm(self.env_cfname)
+            U.conditional_rm(self.env_cfname)
 
             self.assertRaisesMsg(SystemExit,
                                  self.nocfg_exp,
@@ -325,7 +325,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             self.write_cfg_file(self.env_cfname, d)
             os.chmod(self.env_cfname, 0644)
 
-            util.conditional_rm(self.exp_cfname)
+            U.conditional_rm(self.exp_cfname)
 
             self.assertRaisesMsg(SystemExit,
                                  self.nocfg_exp,
@@ -414,8 +414,8 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
           1) return the option value if it's defined
           2) otherwise throw a NoOptionError when the option is missing
         """
-        fname = util.my_name()
         obj = hx.cfg.CrawlConfig.dictor(self.sample)
+        fname = U.my_name()
         obj.filename = fname
         # section and option are in the config object
         self.expected('quack', obj.get_d('sounds', 'duck'))
@@ -606,7 +606,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         self.dbgfunc()
         with ctx.nested(U.Chdir(self.tmpdir()), U.tmpenv('CRAWL_CONF', None)):
-            util.conditional_rm('crawl.cfg')
+            U.conditional_rm('crawl.cfg')
             hx.cfg.get_config(reset=True, soft=True)
             hx.cfg.log(close=True)
             lobj = hx.cfg.log("This is a test log message")
@@ -640,7 +640,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
 
         EXP: Attempts to log to pathname
         """
-        util.conditional_rm(logpath)
+        U.conditional_rm(logpath)
         hx.cfg.log(close=True)
         logpath = '%s/%s.log' % (self.tmpdir(), U.my_name())
         self.assertPathNotPresent(logpath)
@@ -653,7 +653,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         Routine get_size() translates expressions like '30 mib' to 30 * 1024 *
         1024 or '10mb' to 10,000,000
         """
-        section = util.my_name()
+        section = U.my_name()
         obj = hx.cfg.CrawlConfig()
         obj.add_section(section)
         obj.set(section, 'tenmb', '10mb')
@@ -668,7 +668,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         Call get_size() so it throws NoOptionError but provides a default value
         """
-        section = util.my_name()
+        section = U.my_name()
         obj = hx.cfg.CrawlConfig()
         obj.add_section(section)
         obj.set(section, 'tenmb', '10mb')
@@ -681,7 +681,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         Call get_size() in such a way that it throws a NoOptionError so we can
         see that it adds the filename to the error message
         """
-        section = util.my_name()
+        section = U.my_name()
         fpath = __file__
         obj = hx.cfg.CrawlConfig()
         obj.add_section(section)
@@ -699,7 +699,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         Call get_size() in such a way that it throws a NoSectionError so we can
         see that it adds the filename to the error message
         """
-        section = util.my_name()
+        section = U.my_name()
         obj = hx.cfg.CrawlConfig()
         self.assertRaisesMsg(hx.cfg.NoSectionError,
                              "No section: '%s' in <???>" %
@@ -714,7 +714,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         Call get_size() so it throws NoSectionError but provides a default
         value
         """
-        section = util.my_name()
+        section = U.my_name()
         obj = hx.cfg.CrawlConfig()
         obj.add_section(section)
         obj.set(section, 'tenmb', '10mb')
@@ -824,7 +824,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         Call get_time() in such a way that it throws a NoOptionError so we can
         see that it adds the filename to the error message
         """
-        section = util.my_name()
+        section = U.my_name()
         obj = hx.cfg.CrawlConfig()
         obj.add_section(section)
         self.assertRaisesMsg(hx.cfg.NoOptionError,
@@ -840,7 +840,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         Call get_time() in such a way that it throws a NoSectionError so we can
         see that it adds the filename to the error message
         """
-        section = util.my_name()
+        section = U.my_name()
         obj = hx.cfg.CrawlConfig()
         self.assertRaisesMsg(hx.cfg.NoSectionError,
                              "No section: '%s' in <???>" %
@@ -1047,7 +1047,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
             exp_logfile = U.default_logpath()
             loc = "(%s:%d): " % (sys._getframe().f_code.co_filename,
                                  sys._getframe().f_lineno + 4)
-            exp = (util.my_name() + loc + msg % arg)
+            exp = (U.my_name() + loc + msg % arg)
 
             # test payload
             l = hx.cfg.log(msg, arg)
@@ -1356,7 +1356,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         to it until it rolls over. Verify that the archive file was handled
         correctly.
         """
-        logbase = '%s.log' % util.my_name()
+        logbase = '%s.log' % U.my_name()
         logpath = self.tmpdir(logbase)
         logpath_1 = logpath + ".1"
         archdir = self.tmpdir("history")
@@ -1386,7 +1386,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         to it until it rolls over. Verify that the archive file was handled
         correctly.
         """
-        logbase = '%s.log' % util.my_name()
+        logbase = '%s.log' % U.my_name()
         logpath = self.tmpdir(logbase)
         logpath_1 = logpath + ".1"
         ym = time.strftime("%Y.%m%d")
@@ -1410,7 +1410,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         """
         Test a log message with multiple formatters
         """
-        fpath = self.tmpdir("%s.log" % util.my_name())
+        fpath = self.tmpdir("%s.log" % U.my_name())
         hx.cfg.log(close=True)
         log = hx.cfg.log(logpath=fpath)
 
@@ -1419,34 +1419,34 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         a2 = "zebedee"
         a3 = 94
         a4 = 23.12348293402
-        exp = (util.my_name() +
-               "(%s:%d): " % (util.filename(), util.lineno()+2) +
+        exp = (U.my_name() +
+               "(%s:%d): " % (U.filename(), U.lineno()+2) +
                a1 % (a2, a3, a4))
-        result = util.contents(fpath)
         hx.cfg.log(a1, a2, a3, a4)
+        result = U.contents(fpath)
         self.assertTrue(exp in result,
                         "Expected '%s' in %s" %
-                        (exp, util.line_quote(result)))
+                        (exp, U.line_quote(result)))
 
     # -------------------------------------------------------------------------
     def test_log_onefmt(self):
         """
         Test a log message with just a single formatter
         """
-        fpath = self.tmpdir("%s.log" % util.my_name())
+        fpath = self.tmpdir("%s.log" % U.my_name())
         hx.cfg.log(logpath=fpath, close=True)
 
         # 1 % formatter in first arg
         a1 = "This has a formatter and one argument: %s"
         a2 = "did that work?"
-        exp = (util.my_name() +
-               "(%s:%d): " % (util.filename(), util.lineno()+2) +
+        exp = (U.my_name() +
+               "(%s:%d): " % (U.filename(), U.lineno()+2) +
                a1 % a2)
-        result = util.contents(fpath)
+        result = U.contents(fpath)
         hx.cfg.log(a1, a2)
         self.assertTrue(exp in result,
                         "Expected '%s' in %s" %
-                        (exp, util.line_quote(result)))
+                        (exp, U.line_quote(result)))
 
     # -------------------------------------------------------------------------
     def test_cc_new_logger_000(self):
@@ -2478,7 +2478,7 @@ class CrawlConfigTest(testhelp.HelpedTestCase):
         except hx.cfg.NoOptionError:
             qtspec = "<empty>"
 
-        actual = cfg.quiet_time(util.epoch(tval))
+        actual = cfg.quiet_time(U.epoch(tval))
         self.assertEqual(exp, actual,
                          "'%s'/%s => expected '%s', got '%s'" %
                          (qtspec,
