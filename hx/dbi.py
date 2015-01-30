@@ -4,6 +4,7 @@ Database interface classes
 import base64
 import contextlib
 import cfg
+import msg
 import pdb
 import sqlite3
 import string
@@ -99,9 +100,9 @@ class DBI(object):
         """
         DBI: Here we look for configuration information indicating which kind
         of database to use. In the cfg argument, the caller can pass us a
-        CrawlConfig object. If the cfg argument is not present, we check the
+        cfg object. If the cfg argument is not present, we check the
         default configuration ('crawl.cfg'). Anything else in the cfg argument
-        (i.e., not a CrawlConfig object) will generate an exception.
+        (i.e., not a cfg object) will generate an exception.
 
         Once we know which kind of database to use, we create an object
         specific to that database type and forward calls from the caller to
@@ -115,62 +116,62 @@ class DBI(object):
         """
 
         # Valid arguments in kwargs are:
-        #   'cfg' - a CrawlConfig object
+        #   'cfobj' - a cfg object
         #   'dbtype' - 'hpss' or 'crawler'
         #   'dbname' - if dbtype is 'hpss', this must be 'cfg' or 'sub'
         #   'timeout' - max length of time to retry failing operations
         for key in kwargs:
             if key not in ['cfg', 'dbtype', 'dbname', 'timeout']:
-                raise DBIerror(MSG.invalid_attr_SS % (key, self.__class__))
+                raise DBIerror(msg.invalid_attr_SS % (key, self.__class__))
         if 0 < len(args):
-            if not isinstance(args[0], CrawlConfig.CrawlConfig):
-                raise DBIerror(MSG.unrecognized_arg_S % self.__class__)
+            if not isinstance(args[0], cfg.CrawlConfig):
+                raise DBIerror(msg.unrecognized_arg_S % self.__class__)
             else:
-                cfg = args[0]
+                cfobj = args[0]
         elif 'cfg' in kwargs and kwargs['cfg'] is not None:
-            cfg = kwargs['cfg']
+            cfobj = kwargs['cfg']
         else:
-            cfg = CrawlConfig.add_config()
+            cfobj = cfg.add_config()
 
         dbtype = ''
         dbname = ''
         tbl_pfx = ''
         if 'dbtype' not in kwargs:
-            raise DBIerror(MSG.valid_dbtype)
+            raise DBIerror(msg.valid_dbtype)
         elif kwargs['dbtype'] == 'hpss':
             cfg_section = HPSS_SECTION
-            dbtype = cfg.get(HPSS_SECTION, 'dbtype')
-            tbl_pfx = cfg.get(HPSS_SECTION, 'tbl_prefix')
+            dbtype = cfobj.get(HPSS_SECTION, 'dbtype')
+            tbl_pfx = cfobj.get(HPSS_SECTION, 'tbl_prefix')
             if 'dbname' not in kwargs:
                 raise DBIerror("With dbtype=%s, dbname must be specified" %
                                kwargs['dbtype'])
-            elif kwargs['dbname'] not in cfg.options(HPSS_SECTION):
+            elif kwargs['dbname'] not in cfobj.options(HPSS_SECTION):
                 raise DBIerror("dbname %s not defined in the configuration" %
                                kwargs['dbname'])
             else:
-                dbname = cfg.get(HPSS_SECTION, kwargs['dbname'])
+                dbname = cfobj.get(HPSS_SECTION, kwargs['dbname'])
         elif kwargs['dbtype'] == 'crawler':
             cfg_section = CRWL_SECTION
             if 'dbname' in kwargs:
                 raise DBIerror("dbname may not be specified here")
-            dbtype = cfg.get(CRWL_SECTION, 'dbtype')
+            dbtype = cfobj.get(CRWL_SECTION, 'dbtype')
             try:
-                dbname = cfg.get(CRWL_SECTION, 'dbname')
-            except CrawlConfig.NoOptionError as e:
+                dbname = cfobj.get(CRWL_SECTION, 'dbname')
+            except cfg.NoOptionError as e:
                 raise DBIerror(e)
-            tbl_pfx = cfg.get(CRWL_SECTION, 'tbl_prefix')
+            tbl_pfx = cfobj.get(CRWL_SECTION, 'tbl_prefix')
         else:
-            raise DBIerror(MSG.valid_dbtype)
+            raise DBIerror(msg.valid_dbtype)
 
         okw = {}
-        okw['cfg'] = cfg
+        okw['cfg'] = cfobj
         okw['dbname'] = dbname
         okw['tbl_prefix'] = tbl_pfx
 
         if 'timeout' in kwargs:
             okw['timeout'] = kwargs['timeout']
         else:
-            okw['timeout'] = cfg.get_time(cfg_section, 'timeout', 3600)
+            okw['timeout'] = cfobj.get_time(cfg_section, 'timeout', 3600)
 
         self.closed = False
         if dbtype == 'sqlite':
@@ -180,7 +181,7 @@ class DBI(object):
         elif dbtype == 'db2':
             self._dbobj = DBIdb2(*args, **okw)
         else:
-            raise DBIerror(Msg.unknown_dbtype)
+            raise DBIerror(msg.unknown_dbtype)
 
         self.dbname = self._dbobj.dbname
 
@@ -315,7 +316,7 @@ class DBI(object):
         updated. Fields is a list of field names. Data is a list of tuples.
         """
         if self.closed:
-            raise DBIerror(MSG.db_closed, dbname=self._dbobj.dbname)
+            raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         return self._dbobj.update(**kwargs)
 
 
@@ -1199,7 +1200,7 @@ if db2_available:
             try:
                 cfg = kwargs['cfg']
             except:
-                cfg = CrawlConfig.get_config()
+                cfg = cfg.get_config()
 
             if not hasattr(self, 'timeout'):
                 self.timeout = cfg.get_time(HPSS_SECTION, 'timeout', 3600)
@@ -1246,7 +1247,7 @@ if db2_available:
             elif 'A communication error has been detected' in str(err):
                 if not hasattr(self, 'sleeptime'):
                     self.sleeptime = 0.1
-                CrawlConfig.log('Riding out DB2 outage -- sleeping %f seconds'
+                cfg.log('Riding out DB2 outage -- sleeping %f seconds'
                                 % self.sleeptime)
                 time.sleep(self.sleeptime)
                 self.sleeptime = min(2*self.sleeptime, 60.0)
