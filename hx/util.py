@@ -840,11 +840,12 @@ def date_start(filename):
 
 
 # -----------------------------------------------------------------------------
-def rstring():
+def rstring(lolen=10, hilen=25):
     """
-    Return a string of random characters of a random length between 10 and 25
+    Return a string of random characters of a random length between *lolen* and
+    *hilen*
     """
-    size = random.randint(10, 25)
+    size = random.randint(lolen, hilen)
     rval = ''
     for jdx in range(size):
         rval += random.choice(string.uppercase +
