@@ -24,23 +24,25 @@ def pytest_addoption(parser):
     """
     Add options --nolog, --all to the command line
     """
-    global attr
     parser.addoption("--all", action="store_true",
                      help="run all tests")
     parser.addoption("--dbg", action="append", default=[],
                      help="start debugger on named test or all")
     parser.addoption("--fast", action="store_true",
                      help="run only the fast tests")
-    parser.addoption("--keep", action="store_true",
-                     help="preserve test tables")
     parser.addoption("--nolog", action="store_true", default=False,
                      help="suppress test logging")
     parser.addoption("--skip", action="append", default=[],
                      help="skip tests with matching tags")
-    attr = pytest.mark.attr
-    if os.path.isdir('build'):
-        raise SystemExit('\n   Directory build will cause test failures. ' +
-                         'Please remove it and try again.\n')
+
+
+# -----------------------------------------------------------------------------
+def pytest_configure(config):
+    """
+    If --all is on command line, override the -x in pytest.ini
+    """
+    if config.option.all and config.option.exitfirst:
+        config.option.exitfirst = False
 
 
 # -----------------------------------------------------------------------------
