@@ -1307,8 +1307,14 @@ if db2_available:
             try:
                 rval = self.dbh.cursor()
                 return rval
-            except mysql_exc.Error as e:
-                raise DBIerror("%d: %s" % e.args, dbname=self.dbname)
+            except ibm_db_dbi.Error as e:
+                raise DBIerror(''.join(e.args), dbname=self.dbname)
+            except Exception as e:
+                if self.__recognized_exception__(e):
+                    errmsg = str(e) + "\nSQL: '" + cmd + "'"
+                    raise DBIerror(errmsg, dbname=self.dbname)
+                else:
+                    raise
 
         # ---------------------------------------------------------------------
         def delete(self, **kwargs):
@@ -1444,8 +1450,15 @@ if db2_available:
                 else:
                     raise DBIerror(MSG.more_than_one_ss %
                                    ('@syscat.tables', table))
-            except mysql_exc.Error as e:
-                raise DBIerror("%d: %s" % e.args, dbname=self.dbname)
+            except ibm_db_dbi.Error as e:
+                raise DBIerror(''.join(e.args), dbname=self.dbname)
+            except Exception as e:
+                if self.__recognized_exception__(e):
+                    errmsg = str(e) + "\nSQL: '" + cmd + "'"
+                    raise DBIerror(errmsg, dbname=self.dbname)
+                else:
+                    raise
+
 
         # ---------------------------------------------------------------------
         def update(self, table='', where='', fields=[], data=[]):
