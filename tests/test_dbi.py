@@ -39,6 +39,7 @@ import hx.util
 import os
 import pdb
 import pytest
+import random
 import sqlite3
 import socket
 import sys
@@ -1888,17 +1889,20 @@ class DBI_out_Base(object):
         in the database
         """
         self.dbgfunc()
-        db = self.DBI()
+        cf = hx.cfg.add_config(filename="mysql.cfg", close=True)
+        sect = [x for x in cf.sections() if x != cf.meta_section()][0]
+        db = hx.dbi.DBI(cfg=cf, section=sect, tbl_prefix='test')
         pre = db.table_list()
         count = random.randint(4, 9)
-        for n in range(count):
-            rname = hx.util.rstring(8, 12)
-            rn.append(rname)
+        rn = [hx.util.rstring(8, 12) for x in range(count)]
+        for rname in rn:
             db.create(table=rname, fields=self.fdef)
-
+        
         post = db.table_list()
+
+        tnl = ['test_' + x for x in rn]
         added = [x for x in post if x not in pre]
-        self.expected(sorted(rn), sorted(added))
+        self.expected(sorted(tnl), sorted(added))
 
         for rname in rn:
             db.drop(table=rname)
@@ -2187,9 +2191,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         DBImysqlTest:
         """
-        # hx.cfg.add_config(filename="mysql.cfg", close=True)
         cls.drop_test_tables()
-        # dbschem.drop_tables_matching("test_%")
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -2197,9 +2199,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         DBImysqlTest:
         """
-        if not pytest.config.getvalue("keep"):
-            # dbschem.drop_tables_matching("test_%")
-            cls.drop_test_tables()
+        cls.drop_test_tables()
 
     # -------------------------------------------------------------------------
     @classmethod
@@ -2207,14 +2207,14 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         Drop tables like 'test_%'
         """
-        pdb.set_trace()
+        # pdb.set_trace()
         cf = hx.cfg.add_config(filename="mysql.cfg", close=True)
         sect = [x for x in cf.sections() if x != cf.meta_section()][0]
-        db = hx.dbi.DBI(cfg=cf, section=sect)
+        db = hx.dbi.DBI(cfg=cf, section=sect, tbl_prefix="test")
         tl = db.table_list()
-        for (tname,) in tlist:
-            if self.table_exists(table=tname):
-                print("would drop %s" % tname)
+        for tname in tl:
+            if db.table_exists(table=tname):
+                db.drop(table=tname)
         db.close()
 
     # -------------------------------------------------------------------------

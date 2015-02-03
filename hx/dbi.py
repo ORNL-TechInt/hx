@@ -274,6 +274,15 @@ class DBI(object):
         return self._dbobj.table_exists(**kwargs)
 
     # -------------------------------------------------------------------------
+    def table_list(self, **kwargs):
+        """
+        DBI: Return a list of tables in the database.
+        """
+        if self.closed:
+            raise DBIerror(MSG.db_closed, dbname=self._dbobj.dbname)
+        return self._dbobj.table_list(**kwargs)
+
+    # -------------------------------------------------------------------------
     def close(self):
         """
         DBI: Close the connection to the database. After a call to close(),
@@ -742,6 +751,24 @@ class DBIsqlite(DBI_abstract):
             raise DBIerror(''.join(e.args), dbname=self.dbname)
 
     # -------------------------------------------------------------------------
+    def table_list(self):
+        """
+        DBIsqlite: See DBI.table_list()
+        """
+        try:
+            dbc = self.dbh.cursor()
+            dbc.execute("""
+                        select name from sqlite_master
+                        where type='table'
+                        and name like ?
+                        """, (self.prefix('%'),))
+            rows = dbc.fetchall()
+            dbc.close()
+            return rows
+        except sqlite3.Error as e:
+            raise DBIerror(''.join(e.args), dbname=self.dbname)
+
+    # -------------------------------------------------------------------------
     def update(self, table='', where='', fields=[], data=[]):
         """
         DBIsqlite: See DBI.update()
@@ -1183,6 +1210,27 @@ if mysql_available:
                 self.err_handler(e)
 
         # ---------------------------------------------------------------------
+        def table_list(self):
+            """
+            DBImysql: See DBI.table_list()
+            """
+            try:
+                dbc = self.dbh.cursor()
+                with warnings.catch_warnings():
+                    warnings.filterwarnings("ignore",
+                                            "Can't read dir of .*")
+                    dbc.execute("""
+                                select table_name
+                                from information_schema.tables
+                                where table_name like %s
+                                """, (self.prefix('%'),))
+                rows = dbc.fetchall()
+                dbc.close()
+                return [x[0] for x in rows]
+            except mysql_exc.Error as e:
+                raise DBIerror(''.join(e.args), dbname=self.dbname)
+
+        # ---------------------------------------------------------------------
         def update(self, table='', where='', fields=[], data=[]):
             """
             DBImysql: See DBI.update()
@@ -1488,6 +1536,26 @@ if db2_available:
                 else:
                     raise DBIerror(msg.more_than_one_ss %
                                    ('@syscat.tables', table))
+            except ibm_db_dbi.Error as e:
+                raise DBIerror(''.join(e.args), dbname=self.dbname)
+            except Exception as e:
+                if self.__recognized_exception__(e):
+                    errmsg = str(e) + "\nSQL: '" + cmd + "'"
+                    raise DBIerror(errmsg, dbname=self.dbname)
+                else:
+                    raise
+
+        # -------------------------------------------------------------------------
+        def table_list(self):
+            """
+            DBIdb2: See DBI.table_list()
+            """
+            try:
+                rows = self.select(table="@syscat.tables",
+                                   fields=['tabname'],
+                                   where="tabschema = 'HPSS' and " +
+                                   "tabname like %")
+                return rows
             except ibm_db_dbi.Error as e:
                 raise DBIerror(''.join(e.args), dbname=self.dbname)
             except Exception as e:
