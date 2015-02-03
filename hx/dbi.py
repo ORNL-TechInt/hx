@@ -28,10 +28,6 @@ except ImportError:
     mysql_available = False
 
 
-HPSS_SECTION = 'dbi-hpss'
-CRWL_SECTION = 'dbi-crawler'
-
-
 # -----------------------------------------------------------------------------
 class DBI_abstract(object):
     """
@@ -81,6 +77,23 @@ class DBI_abstract(object):
                 self.err_handler(e)
         return rval
 
+    # -------------------------------------------------------------------------
+    def validate_args(self, ai, kw, cname):
+        """
+        DBI_abstract: Generic argument validation for the DBI constructors
+        """
+        # First, check that everything in kw is allowed by ai
+        for a in kw:
+            if a in ai['req'] + [n[0] for n in ai['opt']]:
+                setattr(self, a, kw[a])
+            else:
+                raise DBIerror(msg.invalid_attr_SS % (a, cname))
+
+        # Next, check that everything required from ai is present in kw
+        for a in ai['req']:
+            if a not in kw:
+                raise DBIerror(msg.missing_arg_S % a)
+
 
 # -----------------------------------------------------------------------------
 class DBI(object):
@@ -89,20 +102,22 @@ class DBI(object):
     class so it doesn't have to know anything about talking to the database
     type actually in use.
 
-    When a DBI object is created, it looks for an argument named "dbtype" in
-    kwargs that should contain "sqlite", "mysql", or "db2".
+    When a DBI object is created, it looks for an argument named 'dbtype' in
+    kwargs that should contain 'sqlite', 'mysql', or 'db2'.
 
     The DBI creates an internal object of the appropriate type and then
     forwards all method calls to it.
     """
     # -------------------------------------------------------------------------
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         """
-        DBI: Here we look for configuration information indicating which kind
-        of database to use. In the cfg argument, the caller can pass us a
-        cfg object. If the cfg argument is not present, we check the
-        default configuration ('crawl.cfg'). Anything else in the cfg argument
-        (i.e., not a cfg object) will generate an exception.
+        DBI: Here we construct a database interface object. In *kwargs*, we can
+        take dbtype, dbname, tbl_prefix, hostname, username, and password or
+        cfg and section name, or cfg and section name with one or more of the
+        preceding arguments specified as overrides.
+
+        If dbtype is 'sqlite', dbname and tbl_prefix are required. If dbtype is
+        'mysql' or 'db2', hostname, username, and password are also required.
 
         Once we know which kind of database to use, we create an object
         specific to that database type and forward calls from the caller to
@@ -113,75 +128,115 @@ class DBI(object):
         little thing we do. If our operational mode ever becomes complicated
         enough, we may need more control over commits but autocommit will do
         for now.
+
+        Valid arguments in kwargs are:
+          'cfg' - a cfg object
+          'section' - name of section in cfg (required if cfg present)
+          'dbtype' - 'sqlite', 'mysql', or 'db2' (required if cfg absent)
+          'dbname' - name of database to access, required if cfg absent
+          'tbl_prefix' - which tables to use; required if cfg absent
+          'hostname' - where the database lives; required if cfg absent and
+             dbtype is not 'sqlite'
+          'port' - which port the db engine listens on; required if dbtype is
+             'db2'
+          'username' - for connecting to database; required if cfg absent and
+             dbtype is not 'sqlite'
+          'password' - for connecting to database; required if cfg absent and
+             dbtype is not 'sqlite'
+          'timeout' - max length of time to retry failing operations. optional
+
+        If 'cfg' and 'section' are provided, we get everything we need from
+        'section' of 'cfg'.
+
+        If the other values are provided, we use them.
+
+        If 'cfg' and 'section' are provided along with some of the other
+        values, the values provided in the call override those items from the
+        configuration.
         """
+        arginfo = {'sqlite': DBIsqlite.arginfo(),
+                   'mysql': DBImysql.arginfo(),
+                   'db2': DBIdb2.arginfo()}
 
-        # Valid arguments in kwargs are:
-        #   'cfobj' - a cfg object
-        #   'dbtype' - 'hpss' or 'crawler'
-        #   'dbname' - if dbtype is 'hpss', this must be 'cfg' or 'sub'
-        #   'timeout' - max length of time to retry failing operations
-        for key in kwargs:
-            if key not in ['cfg', 'dbtype', 'dbname', 'timeout']:
-                raise DBIerror(msg.invalid_attr_SS % (key, self.__class__))
-        if 0 < len(args):
-            if not isinstance(args[0], cfg.CrawlConfig):
-                raise DBIerror(msg.unrecognized_arg_S % self.__class__)
+        if 'cfg' in kwargs and 'section' in kwargs:
+            # We got a config and section. We need to copy the relevant values
+            # out of the config into kwargs.
+            cf = kwargs['cfg']
+            section = kwargs['section']
+
+            # First, we need to know our dbtype to know which set of arguments
+            # we need.
+            if 'dbtype' in kwargs:
+                dbtype = kwargs['dbtype']
+                del kwargs['dbtype']
+            elif cf.has_option(section, 'dbtype'):
+                dbtype = cf.get(section, 'dbtype')
             else:
-                cfobj = args[0]
-        elif 'cfg' in kwargs and kwargs['cfg'] is not None:
-            cfobj = kwargs['cfg']
-        else:
-            cfobj = cfg.add_config()
+                raise DBIerror(msg.cfg_missing_parm_S % 'dbtype')
 
-        dbtype = ''
-        dbname = ''
-        tbl_pfx = ''
-        if 'dbtype' not in kwargs:
-            raise DBIerror(msg.valid_dbtype)
-        elif kwargs['dbtype'] == 'hpss':
-            cfg_section = HPSS_SECTION
-            dbtype = cfobj.get(HPSS_SECTION, 'dbtype')
-            tbl_pfx = cfobj.get(HPSS_SECTION, 'tbl_prefix')
-            if 'dbname' not in kwargs:
-                raise DBIerror("With dbtype=%s, dbname must be specified" %
-                               kwargs['dbtype'])
-            elif kwargs['dbname'] not in cfobj.options(HPSS_SECTION):
-                raise DBIerror("dbname %s not defined in the configuration" %
-                               kwargs['dbname'])
+            req = arginfo[dbtype]['req']
+            opt = arginfo[dbtype]['opt']
+
+            # If a required argument is already in kwargs, we don't get it from
+            # the config -- the caller passed it to override the config value.
+            # Otherwise, if it's not in the config, we have an error.
+            for item in req:
+                if item not in kwargs:
+                    if not cf.has_option(section, item):
+                        raise DBIerror(msg.cfg_missing_parm_S % item)
+                    else:
+                        kwargs[item] = cf.get(section, item)
+
+            # If an optional argument is already in kwargs, we don't get it
+            # from the config -- the caller passed it to override the config
+            # value. If it's not in kwargs and not in the config, we set it to
+            # its default value
+            for item, default in opt:
+                if item not in kwargs:
+                    if not cf.has_option(section, item):
+                        kwargs[item] = default
+                    else:
+                        kwargs[item] = cf.get(section, item)
+
+            del kwargs['cfg']
+            del kwargs['section']
+
+        elif 'cfg' in kwargs and 'section' not in kwargs:
+
+            # if we did get a 'cfg' argument, but didn't get a 'section'
+            # argument telling us which section of the cfg object to look in,
+            # it's an error.
+            raise DBIerror(msg.section_required)
+
+        elif 'cfg' not in kwargs:
+
+            if 'dbtype' not in kwargs:
+                raise DBIerror(msg.dbtype_required)
+            elif kwargs['dbtype'] not in arginfo:
+                raise DBIerror(msg.valid_dbtype)
             else:
-                dbname = cfobj.get(HPSS_SECTION, kwargs['dbname'])
-        elif kwargs['dbtype'] == 'crawler':
-            cfg_section = CRWL_SECTION
-            if 'dbname' in kwargs:
-                raise DBIerror("dbname may not be specified here")
-            dbtype = cfobj.get(CRWL_SECTION, 'dbtype')
-            try:
-                dbname = cfobj.get(CRWL_SECTION, 'dbname')
-            except cfg.NoOptionError as e:
-                raise DBIerror(e)
-            tbl_pfx = cfobj.get(CRWL_SECTION, 'tbl_prefix')
-        else:
-            raise DBIerror(msg.valid_dbtype)
+                dbtype = kwargs['dbtype']
+                del kwargs['dbtype']
 
-        okw = {}
-        okw['cfg'] = cfobj
-        okw['dbname'] = dbname
-        okw['tbl_prefix'] = tbl_pfx
+                req = arginfo[dbtype]['req']
+                opt = arginfo[dbtype]['opt']
 
-        if 'timeout' in kwargs:
-            okw['timeout'] = kwargs['timeout']
-        else:
-            okw['timeout'] = cfobj.get_time(cfg_section, 'timeout', 3600)
+                for item in req:
+                    if item not in kwargs:
+                        raise DBIerror(msg.missing_arg_S % item)
+                for item, default in opt:
+                    if item not in kwargs:
+                        kwargs[item] = default
 
         self.closed = False
         if dbtype == 'sqlite':
-            self._dbobj = DBIsqlite(*args, **okw)
+            self._dbobj = DBIsqlite(**kwargs)
         elif dbtype == 'mysql':
-            self._dbobj = DBImysql(*args, **okw)
+            self._dbobj = DBImysql(**kwargs)
         elif dbtype == 'db2':
-            self._dbobj = DBIdb2(*args, **okw)
+            self._dbobj = DBIdb2(**kwargs)
         else:
-            raise DBIerror(msg.unknown_dbtype)
+            raise DBIerror(msg.unknown_dbtype_S)
 
         self.dbname = self._dbobj.dbname
 
@@ -319,7 +374,6 @@ class DBI(object):
             raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         return self._dbobj.update(**kwargs)
 
-
 # -----------------------------------------------------------------------------
 class DBIerror(Exception):
     """
@@ -344,19 +398,17 @@ class DBIerror(Exception):
 # -----------------------------------------------------------------------------
 class DBIsqlite(DBI_abstract):
     # -------------------------------------------------------------------------
+    @classmethod
+    def arginfo(cls):
+        return {'req': ['dbname', 'tbl_prefix'],
+                'opt': []}
+
+    # -------------------------------------------------------------------------
     def __init__(self, *args, **kwargs):
         """
         DBIsqlite: See DBI.__init__()
         """
-        for attr in kwargs:
-            if attr in self.settable_attrl:
-                setattr(self, attr, kwargs[attr])
-            else:
-                raise DBIerror(MSG.invalid_attr_SS % (attr, self.__class__))
-        if not hasattr(self, 'dbname'):
-            raise DBIerror(MSG.dbname_required)
-        if not hasattr(self, 'tbl_prefix'):
-            raise DBIerror("A table prefix is required")
+        self.validate_args(self.arginfo(), kwargs, self.__class__)
 
         if self.tbl_prefix != '':
             self.tbl_prefix = self.tbl_prefix.rstrip('_') + '_'
@@ -389,7 +441,7 @@ class DBIsqlite(DBI_abstract):
         DBIsqlite: Sqlite ignores pos if it's set and does not support dropcol.
         """
         if type(table) != str:
-            raise DBIerror(MSG.alter_table_string,
+            raise DBIerror(msg.alter_table_string,
                            dbname=self.dbname)
         elif table == '':
             raise DBIerror("On alter(), table name must not be empty",
@@ -440,7 +492,7 @@ class DBIsqlite(DBI_abstract):
             raise DBIerror("On create(), fields must not be empty",
                            dbname=self.dbname)
         if type(table) != str:
-            raise DBIerror(MSG.create_table_string,
+            raise DBIerror(msg.create_table_string,
                            dbname=self.dbname)
         elif table == '':
             raise DBIerror("On create(), table name must not be empty",
@@ -523,7 +575,7 @@ class DBIsqlite(DBI_abstract):
             self.err_handler(e)
 
         if [] == rows:
-            raise DBIerror(MSG.no_such_table_S % self.prefix(table))
+            raise DBIerror(msg.no_such_table_S % self.prefix(table))
 
         return rows
 
@@ -574,7 +626,7 @@ class DBIsqlite(DBI_abstract):
             raise DBIerror("On insert(), data list must not be empty",
                            dbname=self.dbname)
         elif type(ignore) != bool:
-            raise DBIerror(MSG.insert_ignore_bool, dbname=self.dbname)
+            raise DBIerror(msg.insert_ignore_bool, dbname=self.dbname)
 
         # Construct and run the insert statement
         try:
@@ -681,7 +733,7 @@ class DBIsqlite(DBI_abstract):
             elif 1 == len(rows):
                 return True
             else:
-                raise DBIerror(MSG.more_than_one_ss % ('sqlite_master', table))
+                raise DBIerror(msg.more_than_one_ss % ('sqlite_master', table))
         except sqlite3.Error as e:
             raise DBIerror(''.join(e.args), dbname=self.dbname)
 
@@ -735,35 +787,27 @@ if mysql_available:
     # -------------------------------------------------------------------------
     class DBImysql(DBI_abstract):
         # ---------------------------------------------------------------------
+        @classmethod
+        def arginfo(cls):
+            return {'req': ['dbname', 'tbl_prefix',
+                            'hostname', 'username', 'password'],
+                    'opt': [('timeout', 3600)]}
+
+        # ---------------------------------------------------------------------
         def __init__(self, *args, **kwargs):
             """
             DBImysql: See DBI.__init__()
             """
-            for attr in kwargs:
-                if attr in self.settable_attrl:
-                    setattr(self, attr, kwargs[attr])
-                else:
-                    raise DBIerror(MSG.invalid_attr_SS % (attr,
-                                                          self.__class__))
-            if not hasattr(self, 'dbname'):
-                raise DBIerror(MSG.dbname_required)
-            if not hasattr(self, 'tbl_prefix'):
-                raise DBIerror("A table prefix is required")
+            self.validate_args(self.arginfo(), kwargs, self.__class__)
 
             if self.tbl_prefix != '':
                 self.tbl_prefix = self.tbl_prefix.rstrip('_') + '_'
-            cfg = kwargs['cfg']
-            if not hasattr(self, 'timeout'):
-                self.timeout = cfg.get_time(CRWL_SECTION, 'timeout', 3600)
-            host = cfg.get(CRWL_SECTION, 'hostname')
-            username = cfg.get(CRWL_SECTION, 'username')
-            password = base64.b64decode(cfg.get(CRWL_SECTION, 'password'))
 
             self.dbh = self.retry(mysql_exc.Error,
                                   mysql.connect,
-                                  host=host,
-                                  user=username,
-                                  passwd=password,
+                                  host=self.hostname,
+                                  user=self.username,
+                                  passwd=base64.b64decode(self.password),
                                   db=self.dbname)
             self.dbh.autocommit(True)
 
@@ -946,7 +990,7 @@ if mysql_available:
                 self.err_handler(e)
 
             if 0 == len(r):
-                raise DBIerror(MSG.no_such_table_S % self.prefix(table))
+                raise DBIerror(msg.no_such_table_S % self.prefix(table))
 
             return r
 
@@ -1001,7 +1045,7 @@ if mysql_available:
                 raise DBIerror("On insert(), data list must not be empty",
                                dbname=self.dbname)
             elif type(ignore) != bool:
-                raise DBIerror(MSG.insert_ignore_bool, dbname=self.dbname)
+                raise DBIerror(msg.insert_ignore_bool, dbname=self.dbname)
 
             # Construct and run the insert statement
             try:
@@ -1126,7 +1170,7 @@ if mysql_available:
                 elif 1 == len(rows):
                     return True
                 else:
-                    raise DBIerror(MSG.more_than_one_ss %
+                    raise DBIerror(msg.more_than_one_ss %
                                    ('information_schema.tables', table))
             except mysql_exc.Error as e:
                 self.err_handler(e)
@@ -1180,47 +1224,30 @@ if db2_available:
     # -----------------------------------------------------------------------------
     class DBIdb2(DBI_abstract):
         # -------------------------------------------------------------------------
+        @classmethod
+        def arginfo(self):
+            return {'req': ['dbname', 'tbl_prefix', 'hostname', 'port',
+                            'username', 'password'],
+                    'opt': [('timeout', 3600)]}
+
+        # -------------------------------------------------------------------------
         def __init__(self, *args, **kwargs):
             """
             DBIdb2: See DBI.__init__()
             """
-            for attr in kwargs:
-                if attr in self.settable_attrl:
-                    setattr(self, attr, kwargs[attr])
-                else:
-                    raise DBIerror(MSG.invalid_attr_SS % (attr,
-                                                          self.__class__))
-            if not hasattr(self, 'dbname'):
-                raise DBIerror(MSG.dbname_required)
-            if not hasattr(self, 'tbl_prefix'):
-                self.tbl_prefix = 'hpss'
+            self.validate_args(self.arginfo(), kwargs, self.__class__)
 
             if self.tbl_prefix != '':
                 self.tbl_prefix = self.tbl_prefix.rstrip('.') + '.'
-            try:
-                cfg = kwargs['cfg']
-            except:
-                cfg = cfg.get_config()
 
-            if not hasattr(self, 'timeout'):
-                self.timeout = cfg.get_time(HPSS_SECTION, 'timeout', 3600)
-            util.env_update(cfg)
-            host = cfg.get(HPSS_SECTION, 'hostname')
-            port = cfg.get(HPSS_SECTION, 'port')
-            try:
-                username = cfg.get(HPSS_SECTION, 'username')
-            except:
-                username = ''
-            try:
-                password = base64.b64decode(cfg.get(HPSS_SECTION, 'password'))
-            except:
-                password = ''
+            cfobj = cfg.add_config()
+            util.env_update(cfobj)
 
             cxnstr = ("database=%s;" % self.dbname +
-                      "hostname=%s;" % host +
-                      "port=%s;" % port +
-                      "uid=%s;" % username +
-                      "pwd=%s;" % password)
+                      "hostname=%s;" % self.hostname +
+                      "port=%s;" % self.port +
+                      "uid=%s;" % self.username +
+                      "pwd=%s;" % base64.b64decode(self.password))
             self.dbh = self.retry(Exception,
                                   db2.connect,
                                   cxnstr,
@@ -1278,7 +1305,7 @@ if db2_available:
             """
             DBIdb2: See DBI.alter()
             """
-            raise DBIerror(MSG.db2_unsupported_S % "ALTER")
+            raise DBIerror(msg.db2_unsupported_S % "ALTER")
 
         # ---------------------------------------------------------------------
         def close(self):
@@ -1297,7 +1324,7 @@ if db2_available:
             """
             DBIdb2: See DBI.create()
             """
-            raise DBIerror(MSG.db2_unsupported_S % "CREATE")
+            raise DBIerror(msg.db2_unsupported_S % "CREATE")
 
         # ---------------------------------------------------------------------
         def cursor(self):
@@ -1321,28 +1348,28 @@ if db2_available:
             """
             DBIdb2: See DBI.delete()
             """
-            raise DBIerror(MSG.db2_unsupported_S % "DELETE")
+            raise DBIerror(msg.db2_unsupported_S % "DELETE")
 
         # ---------------------------------------------------------------------
         def describe(self, **kwargs):
             """
             DBIdb2: Return a table description
             """
-            raise DBIerror(MSG.db2_unsupported_S % "DESCRIBE")
+            raise DBIerror(msg.db2_unsupported_S % "DESCRIBE")
 
         # ---------------------------------------------------------------------
         def drop(self, table=''):
             """
             DBIdb2:
             """
-            raise DBIerror(MSG.db2_unsupported_S % "DROP")
+            raise DBIerror(msg.db2_unsupported_S % "DROP")
 
         # ---------------------------------------------------------------------
         def insert(self, table='', fields=[], data=[]):
             """
             DBIdb2: Insert not supported for DB2
             """
-            raise DBIerror(MSG.db2_unsupported_S % "INSERT")
+            raise DBIerror(msg.db2_unsupported_S % "INSERT")
 
         # ---------------------------------------------------------------------
         def select(self,
@@ -1441,14 +1468,15 @@ if db2_available:
             try:
                 rows = self.select(table="@syscat.tables",
                                    fields=['tabname'],
-                                   where="tabschema = 'HPSS' and " +
-                                   "tabname = '%s'" % table.upper())
+                                   where="tabschema = '%s' and " +
+                                   "tabname = '%s'" % (self.prefix('').upper(),
+                                                       table.upper()))
                 if 0 == len(rows):
                     return False
                 elif 1 == len(rows):
                     return True
                 else:
-                    raise DBIerror(MSG.more_than_one_ss %
+                    raise DBIerror(msg.more_than_one_ss %
                                    ('@syscat.tables', table))
             except ibm_db_dbi.Error as e:
                 raise DBIerror(''.join(e.args), dbname=self.dbname)
@@ -1465,7 +1493,7 @@ if db2_available:
             """
             DBIdb2: See DBI.update()
             """
-            raise DBIerror(MSG.db2_unsupported_S % "UPDATE")
+            raise DBIerror(msg.db2_unsupported_S % "UPDATE")
 
         # ---------------------------------------------------------------------
         @classmethod

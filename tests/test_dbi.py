@@ -7,10 +7,28 @@ The db2 interface only supports read operations, nothing that will change the
 database. Also the db2 interface doesn't use table prefixes.
 
 NOTE: Some of these tests depend on having access to a default config file with
-valid entries in the [dbi-crawler] and [dbi-hpss] sections. This means that the
-hostname, port, username, and password fields of the [dbi-hpss] section must
-point to a functional DB2 server. The [dbi-crawler] section must point either
-to an sqlite database or a functional mysql server.
+valid entries. This means that the 'db2.cfg' config file must contain a section
+with the following fields identifying a function db2 server:
+ - dbtype
+ - hostname
+ - tbl_prefix
+ - port
+ - username
+ - password
+
+The mysql.cfg file must contain a section with the following fields identifying
+a functional mysql server and database:
+ - dbtype
+ - dbname
+ - hostname
+ - tbl_prefix
+ - useranme
+ - password
+
+The sqlite.cfg file must contain a section with the following fields:
+ - dbtype
+ - dbname
+ - tbl_prefix
 """
 import base64
 import hx.cfg
@@ -29,71 +47,90 @@ import warnings
 
 
 # -----------------------------------------------------------------------------
-def make_db2_tcfg(dbeng, obj):
+def make_db2_tcfg(**kw):
     """
-    Construct and return a config object for a db2 database
+    Construct and return a config object for a db2 database. Arguments were
+    checked by make_tcfg so we don't need to check them here.
     """
-    tcfg = CrawlConfig.CrawlConfig()
-    xcfg = CrawlConfig.add_config('hpssic_mysql_test.cfg', close=True)
-    section = 'dbi-hpss'
+    tcfg = hx.cfg.CrawlConfig()
+    xcfg = hx.cfg.add_config('db2.cfg', close=True)
+    section = xcfg.sections()[0]
     tcfg.add_section(section)
-    tcfg.set(section, 'dbtype', dbeng)
-    tcfg.set(section, 'tbl_prefix', 'hpss')
     for optname in ['cfg', 'sub', 'dbtype', 'tbl_prefix',
                     'hostname', 'port', 'username', 'password']:
         tcfg.set(section, optname, xcfg.get(section, optname))
-    CrawlConfig.add_config(cfg=tcfg, close=True)
-    return tcfg
+    hx.cfg.add_config(cfg=tcfg, close=True)
+    return(tcfg, section)
 
 
 # -----------------------------------------------------------------------------
-def make_mysql_tcfg(dbeng, obj):
+def make_mysql_tcfg(**kw):
     """
-    Construct and return a config object for a mysql database
+    Construct and return a config object for a mysql database. Arguments were
+    checked by make_tcfg so we don't need to check them here.
     """
-    tcfg = CrawlConfig.CrawlConfig()
-    xcfg = CrawlConfig.add_config(filename='hpssic_mysql_test.cfg', close=True)
-    section = 'dbi-crawler'
+    tcfg = hx.cfg.CrawlConfig()
+    xcfg = hx.cfg.add_config(filename='mysql.cfg', close=True)
+    section = xcfg.sections()[0]
     tcfg.add_section(section)
-    tcfg.set(section, 'dbtype', dbeng)
-    tcfg.set(section, 'dbname', xcfg.get('dbi-crawler', 'dbname'))
+    tcfg.set(section, 'dbtype', kw['dbtype'])
+    tcfg.set(section, 'dbname', xcfg.get(section, 'dbname'))
     tcfg.set(section, 'tbl_prefix', 'test')
     for dbparm in ['dbname', 'hostname', 'username', 'password']:
         tcfg.set(section, dbparm, xcfg.get(section, dbparm))
-    CrawlConfig.add_config(cfg=tcfg, close=True)
-    return tcfg
+    hx.cfg.add_config(cfg=tcfg, close=True)
+    return(tcfg, section)
 
 
 # -----------------------------------------------------------------------------
-def make_sqlite_tcfg(dbeng, obj):
+def make_sqlite_tcfg(**kw):
     """
-    Construct and return a config object for an sqlite database
+    Construct and return a config object for an sqlite database Arguments were
+    checked by make_tcfg so we don't need to check them here.
     """
-    cdata = {'crawler': {'context': 'TEST',
-                         'heartbeat': '10s',
-                         'exitpath': '%s/TEST.exit' % hx.msg.default_piddir,
-                         'stopwait_timeout': '5.0',
-                         'sleep_time': '0.25',
-                         'logpath': '/tmp/hpssic_sqlite.log',
-                         'heartbeat': '10s',
-                         },
-             'dbi-crawler': {'dbtype': dbeng,
-                             'dbname': obj.dbname(),
-                             'tbl_prefix': 'test',
-                             }
+    cdata = {'foobar': {'dbtype': kw['dbtype'],
+                        'dbname': kw['dbname'],
+                        'tbl_prefix': 'test',
+                        }
              }
     tcfg = hx.cfg.add_config(close=True, dct=cdata)
-    return tcfg
+    return(tcfg, 'foobar')
 
 
 # -----------------------------------------------------------------------------
-def make_tcfg(dbtype, obj):
+def make_tcfg(**kw):
     """
     Construct and return a config object suitable for a *dbtype* database by
     calling make_*dbtype*_tcfg()
     """
-    func = getattr(sys.modules[__name__], 'make_%s_tcfg' % dbtype)
-    rval = func(dbtype, obj)
+    if 'dbtype' not in kw:
+        raise hx.dbi.DBIerror('expected dbtype in make_tcfg')
+    if 'dbname' not in kw:
+        raise hx.dbi.DBIerror('expected dbname in make_tcfg')
+    for a in kw:
+        if a not in ['dbtype', 'dbname']:
+            raise hx.dbi.DBIerror("unexpected argument '%s' in make_tcfg" %
+                                  a)
+
+    func = getattr(sys.modules[__name__], 'make_%s_tcfg' % kw['dbtype'])
+    return func(**kw)
+
+
+# -----------------------------------------------------------------------------
+def DBI(dbtype, dbname):
+    """
+    Generate a dbi object with no test object to start from
+    """
+    mkw = {}
+    mkw['dbtype'] = dbtype
+    mkw['dbname'] = dbname or ''
+    (cfobj, section) = make_tcfg(**mkw)
+
+    kw = {'cfg': cfobj,
+          'section': section,
+          'timeout': 10.0}
+
+    rval = hx.dbi.DBI(**kw)
     return rval
 
 
@@ -114,60 +151,133 @@ class DBITestRoot(hx.testhelp.HelpedTestCase):
     # -------------------------------------------------------------------------
     def DBI(self, dbname='cfg'):
         """
-        DBITestRoot: Return a hx.dbi.DBI() object based on the current object
+        DBITestRoot: Return a hx.dbi.DBI() object based on the current test
+        object
         """
-        try:
-            x = self._use_args
-        except AttributeError:
-            self._use_args = True
-
-        if self._use_args:
-            args = [make_tcfg(self.dbtype, self)]
-            kw = {'dbtype': self.dbctype,
-                  'timeout': 10.0}
-        else:
-            args = []
-            kw = {'cfg': make_tcfg(self.dbtype, self),
-                  'dbtype': self.dbctype,
-                  'timeout': 10.0}
-
-        if self.dbctype == 'hpss':
-            kw['dbname'] = dbname
-        rval = hx.dbi.DBI(*args, **kw)
-        self._use_args = not self._use_args
-        return rval
+        return DBI(self.dbtype, dbname=dbname)
 
 
 # -----------------------------------------------------------------------------
 class DBITest(DBITestRoot):
     """
-    Tests for the DBI class
+    Tests for the DBI class.
+
+    hx.dbi ctor requires either dbtype, dbname, tbl_prefix, hostname, username,
+    and password, or cfg and section, optionally with other values as
+    overrides. Disallowed combinations are:
+
+    + no cfg, no dbtype
+
+    + cfg but no section
+
+    + dbtype but no cfg, no dbname
+
+    + dbtype, dbname but no cfg, no tbl_prefix
+
+    + dbtype 'mysql' or 'db2', no cfg, no hostname
+    + dbtype 'mysql' or 'db2', no cfg, no username
+    + dbtype 'mysql' or 'db2', no cfg, no password
     """
     # -------------------------------------------------------------------------
-    def test_ctor_nodbname(self):
+    def test_ctor_nocfg_nodbtype(self):
         """
-        DBITest: hx.dbi ctor should not accept a dbname argument. It has to
-        take its dbname from the config.
-
-        hx.dbi ctor called with a dbname but no dbtype should throw an
-        exception.
+        DBITest: no cfg and no dbtype should get a DBIerror
         """
+        self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
-                             "dbtype must be 'hpss' or 'crawler' " +
-                             "(dbname=None)",
+                             "A dbtype is required",
                              hx.dbi.DBI,
                              dbname='foobar')
 
     # -------------------------------------------------------------------------
-    def test_ctor_pos0_arg(self):
+    def test_ctor_cfg_nosection(self):
         """
         DBITest: If the DBI ctor is called with something other than a config
         object in argv[0], it is expected to throw an exception
         """
-        self.assertRaisesRegex(hx.dbi.DBIerror,
-                               hx.msg.unrecognized_arg_S % '.*?',
-                               hx.dbi.DBI,
-                               'foobar')
+        self.dbgfunc()
+        self.assertRaisesMsg(hx.dbi.DBIerror,
+                             "A section name is required",
+                             hx.dbi.DBI,
+                             cfg=make_tcfg(dbtype='sqlite', dbname=self))
+
+    # -------------------------------------------------------------------------
+    def test_ctor_dbtype_only(self):
+        """
+        DBITest: Called with just a dbtype, the DBI ctor should throw an
+        exception
+        """
+        self.dbgfunc()
+        self.assertRaisesMsg(hx.dbi.DBIerror,
+                             "A dbname or cfg object and section name " +
+                             "is required",
+                             hx.dbi.DBI,
+                             dbtype='sqlite')
+
+    # -------------------------------------------------------------------------
+    def test_ctor_no_tbl_prefix(self):
+        """
+        DBITest: Called with a dbtype and dbname but no tbl_prefix (or cfg
+        containing one), the DBI ctor should throw an exception
+        """
+        self.dbgfunc()
+        self.assertRaisesMsg(hx.dbi.DBIerror,
+                             "A tbl_prefix or cfg object and section name " +
+                             "is required",
+                             hx.dbi.DBI,
+                             dbtype='sqlite',
+                             dbname='test.db')
+
+    # -------------------------------------------------------------------------
+    def test_ctor_no_hostname(self):
+        """
+        DBITest: Called with a non-sqlite dbtype, dbname, and tbl_prefix but no
+        hostname (or cfg containing one), the DBI ctor should throw an
+        exception
+        """
+        self.dbgfunc()
+        self.assertRaisesMsg(hx.dbi.DBIerror,
+                             "A hostname or cfg object and section name " +
+                             "is required",
+                             hx.dbi.DBI,
+                             dbtype='mysql',
+                             dbname='test.db',
+                             tbl_prefix='test')
+
+    # -------------------------------------------------------------------------
+    def test_ctor_no_username(self):
+        """
+        DBITest: Called with a non-sqlite dbtype, dbname, and tbl_prefix but no
+        username (or cfg containing one), the DBI ctor should throw an
+        exception
+        """
+        self.dbgfunc()
+        self.assertRaisesMsg(hx.dbi.DBIerror,
+                             "A username or cfg object and section name " +
+                             "is required",
+                             hx.dbi.DBI,
+                             dbtype='mysql',
+                             dbname='test.db',
+                             tbl_prefix='test',
+                             hostname='something.meaningless.org')
+
+    # -------------------------------------------------------------------------
+    def test_ctor_no_password(self):
+        """
+        DBITest: Called with a non-sqlite dbtype, dbname, and tbl_prefix but no
+        password (or cfg containing one), the DBI ctor should throw an
+        exception
+        """
+        self.dbgfunc()
+        self.assertRaisesMsg(hx.dbi.DBIerror,
+                             "A password or cfg object and section name " +
+                             "is required",
+                             hx.dbi.DBI,
+                             dbtype='mysql',
+                             dbname='test.db',
+                             tbl_prefix='test',
+                             hostname='something.meaningless.org',
+                             username='somebody')
 
     # -------------------------------------------------------------------------
     def test_ctor_bad_dbtype(self):
@@ -179,7 +289,12 @@ class DBITest(DBITestRoot):
         self.assertRaisesRegex(hx.dbi.DBIerror,
                                hx.msg.valid_dbtype,
                                hx.dbi.DBI,
-                               dbtype='Informix')
+                               dbtype='Informix',
+                               dbname='foobar',
+                               tbl_prefix='test',
+                               hostname='aardvark',
+                               username='somebody',
+                               password=base64.b64encode('bogus'))
 
     # -------------------------------------------------------------------------
     def test_ctor_upd_closed(self):
@@ -187,7 +302,10 @@ class DBITest(DBITestRoot):
         DBITest: An attempt to update a table in a closed database should throw
         an exception.
         """
-        a = hx.dbi.DBI(cfg=make_tcfg('sqlite', self), dbtype='crawler')
+        self.dbgfunc()
+
+        (cf, section) = make_tcfg(dbtype='sqlite', dbname='test.db')
+        a = hx.dbi.DBI(cfg=cf, section=section)
         a.close()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.db_closed,
@@ -207,12 +325,14 @@ class DBITest(DBITestRoot):
         It might seem like this test should be in the sqlite class below
         (DBIsqliteTest). However, this test is about verifying that the DBI
         class does the right thing based on the configuration it gets, not
-        anything particular about sqlite. What's being tested here is not
+        anything particular about sqlite. What iss being tested here is not
         instantiating an sqlite database connection per se so much as veryfing
         that if the configuration says to get us an sqlite database connection,
-        DBI doesn't hand us back a mysql connection.
+        DBI does not hand us back a mysql connection.
         """
-        a = hx.dbi.DBI(cfg=make_tcfg('sqlite', self), dbtype='crawler')
+        self.dbgfunc()
+        (cfobj, section) = make_tcfg(dbtype='sqlite', dbname='test.db')
+        a = hx.dbi.DBI(cfg=cfobj, section=section)
         self.assertTrue(hasattr(a, '_dbobj'),
                         "Expected to find a _dbobj attribute on %s" % a)
         self.assertTrue(isinstance(a._dbobj, hx.dbi.DBIsqlite),
@@ -257,6 +377,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling close() should free up the db resources and make
         the database handle unusable.
         """
+        self.dbgfunc()
         a = self.DBI()
         a.close()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -268,6 +389,7 @@ class DBI_in_Base(object):
         """
         DBI_in_Base: Closing a closed database should generate an exception.
         """
+        self.dbgfunc()
         db = self.DBI()
         db.close()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -291,6 +413,7 @@ class DBI_in_Base(object):
         """
         DBI_in_Base: Closing an open database should work.
         """
+        self.dbgfunc()
         db = self.DBI()
         db.close()
         self.expected(True, db.closed)
@@ -301,6 +424,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling cursor() on a closed database should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name()
         db = self.DBI()
         db.close()
@@ -314,6 +438,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling describe() on a closed database should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name()
         db = self.DBI()
         db.close()
@@ -328,6 +453,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() on a closed database should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name()
         db = self.DBI()
         db.close()
@@ -343,6 +469,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Verify that a new object has the right attributes with the
         right default values
         """
+        self.dbgfunc()
         a = self.DBI()
         dirl = [q for q in dir(a) if not q.startswith('_')]
         xattr_req = ['alter', 'close', 'create', 'dbname', 'delete',
@@ -374,19 +501,21 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_ctor_dbtype_bad(self):
         """
-        DBI_in_Base: With dbtype value other than 'hpss' or 'crawler',
+        DBI_in_Base: With dbtype value other than 'sqlite', 'mysql', or 'db2',
         constructor should throw exception
         """
+        self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.valid_dbtype,
                              hx.dbi.DBI,
-                             dbtype='not-hpss-not-crawler')
+                             dbtype='invalid-dbtype')
 
     # -------------------------------------------------------------------------
     def test_ctor_dbtype_none(self):
         """
         DBI_in_Base: Without dbtype, constructor should throw exception
         """
+        self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.valid_dbtype,
                              hx.dbi.DBI)
@@ -411,6 +540,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() specifying fields should get only the
         fields requested
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
@@ -428,6 +558,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Select with a group by clause on a field that is present
         in the table.
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
@@ -443,6 +574,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Select with a group by clause that is not a string --
         should get an exception.
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
@@ -459,6 +591,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Select with a group by clause on a field that is unknown
         should get an exception.
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         ns_field = 'fiddle'
@@ -478,6 +611,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() with where with no '?' and an empty data
         list is fine. The data returned should match the where clause.
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
@@ -492,6 +626,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() with a where clause with a '?' and an
         empty data list should get an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         if self.dbtype == 'mysql':
@@ -515,6 +650,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() with where clause with no '?' and data in
         the list should get an exception -- the data would be ignored
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
@@ -532,6 +668,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() with a where clause containing '?' and
         data in the data list should return the data matching the where clause
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
@@ -545,6 +682,7 @@ class DBI_in_Base(object):
         """
         DBI_in_Base: select with limit not an int should throw exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace("test_", "")
         self.setup_select(tname)
         db = self.DBI()
@@ -561,6 +699,7 @@ class DBI_in_Base(object):
         DBI_in_Base: select with int passed for *limit* should retrieve the
         specified number of records
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
@@ -579,6 +718,7 @@ class DBI_in_Base(object):
         DBI_in_Base: select with float passed for *limit* should convert the
         float to an int (without rounding) and use it
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
@@ -597,6 +737,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() with an empty field list should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
@@ -612,6 +753,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() with an empty orderby should get the data
         in the order inserted
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
@@ -625,6 +767,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() with an empty table name should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -639,6 +782,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() with an empty where arg should get all
         the data
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
@@ -652,6 +796,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() with a non-tuple as the data argument
         should get an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -668,6 +813,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() with a non-list as the fields argument
         should get an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -682,6 +828,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() with a non-string orderby argument should
         get an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -697,6 +844,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() with a non-string table argument should
         get an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -711,6 +859,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() with a non-string where argument should
         get an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -726,6 +875,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() specifying orderby should get the rows in
         the order requested
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         exp = [self.testdata[2], self.testdata[4], self.testdata[0],
@@ -741,6 +891,7 @@ class DBI_in_Base(object):
         DBI_in_Base: Calling select() specifying where should get only the rows
         requested
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         exp = [self.testdata[0], self.testdata[2], self.testdata[3]]
@@ -755,6 +906,7 @@ class DBI_in_Base(object):
         DBI_in_Base: If table foo exists, db.table_exists(table='foo') should
         return True
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         self.reset_db(tname)
         db = self.DBI()
@@ -767,6 +919,7 @@ class DBI_in_Base(object):
         DBI_in_Base: If table foo does not exist, db.table_exists(table='foo')
         should return False
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         self.reset_db(tname)
         db = self.DBI()
@@ -816,6 +969,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling alter() to add an existing column should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
@@ -837,6 +991,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling alter() to add a column with injection should get
         an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
@@ -857,6 +1012,7 @@ class DBI_out_Base(object):
         work. With no pos argument, both mysql and sqlite should add the new
         column at the end
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
@@ -882,6 +1038,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling alter() on a database that has been closed should
         get an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -899,6 +1056,7 @@ class DBI_out_Base(object):
           get an exception mysql: exception on injection sqlite: exception on
           drop arg
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -918,6 +1076,7 @@ class DBI_out_Base(object):
         should get an exception mysql: exception on nx col sqlite: exception on
         drop arg
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -936,6 +1095,7 @@ class DBI_out_Base(object):
         """
         DBI_out_Base: Calling alter() with an empty add should get an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -952,6 +1112,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling alter() with an empty add should get an exception
           sqlite: exception on drop argument mysql: exception on empty drop arg
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -970,6 +1131,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling alter() with no table name should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -985,6 +1147,7 @@ class DBI_out_Base(object):
         """
         DBI_out_Base: Calling alter() with no action should get an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -1016,6 +1179,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling create() on a closed database should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name()
         db = self.DBI()
         db.close()
@@ -1031,6 +1195,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling delete() on a closed database should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name()
         db = self.DBI()
         db.close()
@@ -1046,6 +1211,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling drop() on a closed database should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name()
         db = self.DBI()
         db.close()
@@ -1060,6 +1226,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling insert() on a closed database should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name()
         db = self.DBI()
         db.close()
@@ -1076,6 +1243,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling update() on a closed database should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name()
         db = self.DBI()
         db.close()
@@ -1116,6 +1284,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling create() with an empty field list should get an
         exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On create(), fields must not be empty",
@@ -1130,6 +1299,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling create() with an empty table name should get an
         exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On create(), table name must not be empty",
@@ -1144,6 +1314,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling create() with a non-list as the fields argument
         should get an exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On create(), fields must be a list",
@@ -1158,6 +1329,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling create() with a non-string as the table argument
         should get an exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.create_table_string,
@@ -1172,6 +1344,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling create() with correct arguments should create the
         table
         """
+        self.dbgfunc()
         util.conditional_rm(self.dbname())
         db = self.DBI()
         if db.table_exists(table='create_yes'):
@@ -1188,6 +1361,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Attempt to create an object with no dbname should get an
         exception
         """
+        self.dbgfunc()
         tcfg = make_tcfg(self.dbtype, self)
         tcfg.remove_option(CrawlDBI.CRWL_SECTION, 'dbname')
         exp = "No option 'dbname' in section: '%s'" % hx.dbi.CRWL_SECTION
@@ -1195,13 +1369,15 @@ class DBI_out_Base(object):
                              exp,
                              hx.dbi.DBI,
                              cfg=tcfg,
-                             dbtype='crawler')
+                             dbtype=self.dbtype)
 
     # -------------------------------------------------------------------------
-    def test_ctor_dbtype_crawler(self):
+    def test_ctor_dbtype_ok(self):
         """
-        DBI_out_Base: With dbtype value 'crawler', constructor should be okay
+        DBI_out_Base: With dbtype value 'sqlite' or 'mysql', constructor should
+        be okay
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertTrue(hasattr(db, "_dbobj"),
                         "%s: Expected attribute '_dbobj', not present" %
@@ -1213,53 +1389,6 @@ class DBI_out_Base(object):
                         "%s: Expected attribute 'dbh', not present" %
                         self.dbtype)
         db.close()
-
-    # -------------------------------------------------------------------------
-    def test_ctor_dbtype_crawler_dbname(self):
-        """
-        DBI_out_Base: With dbtype value 'crawler' and dbname constructor should
-        throw exception
-        """
-        self.assertRaisesMsg(hx.dbi.DBIerror,
-                             hx.msg.dbname_not_allowed,
-                             hx.dbi.DBI,
-                             dbtype="crawler",
-                             dbname="popeye")
-
-    # -------------------------------------------------------------------------
-    def test_dbschem_drop_table(self):
-        """
-        DBI_out_Base: dbschem.drop_table should return a failure message if the
-        table does not exist, or drop the table if it does.
-        """
-        self.dbgfunc()
-        tname = util.my_name()
-        tcfg = make_tcfg(self.dbtype, self)
-        db = self.DBI()
-
-        rv = dbschem.drop_table(table=tname, cfg=tcfg)
-        self.expected("Table '%s' does not exist" % tname, rv)
-
-        db.create(table=tname, fields=self.fdef)
-        self.assertTrue(db.table_exists(table=tname))
-
-        rv = dbschem.drop_table(table=tname, cfg=tcfg)
-        self.expected("Attempt to drop table '%s' was successful" % tname, rv)
-
-    # -------------------------------------------------------------------------
-    def test_dbschem_make_table(self):
-        """
-        DBI_out_Base: dbschem.make_table() should create the table if it does
-        not already exist. If the table does exist, dbschem.make_table() should
-        do nothing and return the string 'Already'.
-        """
-        tcfg = make_tcfg(self.dbtype, self)
-        result = dbschem.make_table('tcc_data', cfg=tcfg)
-        db = self.DBI()
-        self.assertTrue(db.table_exists(table='tcc_data'))
-        self.expected("Created", result)
-        result = dbschem.make_table('tcc_data', cfg=tcfg)
-        self.expected("Already", result)
 
     # -------------------------------------------------------------------------
     def test_delete_except(self):
@@ -1282,6 +1411,7 @@ class DBI_out_Base(object):
         A delete with no '?' in the where clause and no data tuple is
         okay. The records deleted should match the where clause.
         """
+        self.dbgfunc()
         (db, td) = self.delete_setup()
         db.delete(table=td['tabname'], where="name='sam'")
         rows = db.select(table=td['tabname'], fields=td['ifields'])
@@ -1299,6 +1429,7 @@ class DBI_out_Base(object):
         DBI_out_Base: A delete with a '?' in the where clause and no data tuple
         should get an exception.
         """
+        self.dbgfunc()
         (db, td) = self.delete_setup()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "Criteria are not fully specified",
@@ -1320,6 +1451,7 @@ class DBI_out_Base(object):
         DBI_out_Base: A delete with no '?' in the where clause and a non-empty
         data list should get an exception -- the data would be ignored.
         """
+        self.dbgfunc()
         (db, td) = self.delete_setup()
 
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1343,6 +1475,7 @@ class DBI_out_Base(object):
         DBI_out_Base: A delete with a '?' in the where clause and a non-empty
         data list should delete the data matching the where clause.
         """
+        self.dbgfunc()
         (db, td) = self.delete_setup()
         db.delete(table=td['tabname'], where='name=?', data=('gertrude',))
         rows = db.select(table=td['tabname'], fields=td['ifields'])
@@ -1360,6 +1493,7 @@ class DBI_out_Base(object):
         DBI_out_Base: A delete with an empty table name should throw an
         exception.
         """
+        self.dbgfunc()
         (db, td) = self.delete_setup()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On delete(), table name must not be empty",
@@ -1383,6 +1517,7 @@ class DBI_out_Base(object):
         DBI_out_Base: A delete with an empty where clause should delete all the
         data.
         """
+        self.dbgfunc()
         (db, td) = self.delete_setup()
         db.delete(table=td['tabname'])
         rows = db.select(table=td['tabname'], fields=td['ifields'])
@@ -1396,6 +1531,7 @@ class DBI_out_Base(object):
         DBI_out_Base: A delete with a non-tuple data value should throw an
         exception
         """
+        self.dbgfunc()
         (db, td) = self.delete_setup()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On delete(), data must be a tuple",
@@ -1418,6 +1554,7 @@ class DBI_out_Base(object):
         DBI_out_Base: A delete with a non-string table name should throw an
         exception
         """
+        self.dbgfunc()
         (db, td) = self.delete_setup()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On delete(), table name must be a string",
@@ -1440,6 +1577,7 @@ class DBI_out_Base(object):
         DBI_out_Base: A delete with a non-string where argument should throw an
         exception
         """
+        self.dbgfunc()
         (db, td) = self.delete_setup()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On delete(), where clause must be a string",
@@ -1461,6 +1599,7 @@ class DBI_out_Base(object):
         DBI_out_Base: A delete with a valid where argument should delete the
         data matching the where
         """
+        self.dbgfunc()
         (db, td) = self.delete_setup()
         db.delete(table=td['tabname'], where="name like 's%'")
         rows = db.select(table=td['tabname'], fields=['id', 'name', 'age'])
@@ -1520,6 +1659,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling insert on fields not in the table should get an
         exception
         """
+        self.dbgfunc()
         self.reset_db('fnox')
         db = self.DBI()
         db.create(table='fnox',
@@ -1542,6 +1682,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling insert with an empty data list should get an
         exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On insert(), data list must not be empty",
@@ -1557,6 +1698,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling insert with an empty field list should get an
         exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On insert(), fields list must not be empty",
@@ -1572,6 +1714,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling insert with an empty table name should get an
         exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On insert(), table name must not be empty",
@@ -1587,6 +1730,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling insert with a non-string table name should get an
         exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On insert(), table name must be a string",
@@ -1602,6 +1746,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling insert with a non-list fields arg should get an
         exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On insert(), fields must be a list",
@@ -1617,6 +1762,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling insert with a non-list data arg should get an
         exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On insert(), data must be a list",
@@ -1735,11 +1881,35 @@ class DBI_out_Base(object):
         self.expected(8, len(rows))
 
     # -------------------------------------------------------------------------
+    def test_table_list(self):
+        """
+        DBI_out_Base: table_list() should return the list of tables available
+        in the database
+        """
+        self.dbgfunc()
+        db = self.DBI()
+        pre = db.table_list()
+        count = random.randint(4,9)
+        for n in range(count):
+            rname = hx.util.rstring(8, 12)
+            rn.append(rname)
+            db.create(table=rname, fields=self.fdef)
+
+        post = db.table_list()
+        added = [x for x in post if x not in pre]
+        self.expected(sorted(rn), sorted(added))
+
+        for rname in rn:
+            db.drop(table=rname)
+
+
+    # -------------------------------------------------------------------------
     def test_update_f(self):
         """
         DBI_out_Base: Calling update() specifying fields should update the
         fields requested
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         udata = [('frodo', 23, 199.7),
                  ('zippo', 14, 201.3),
@@ -1768,6 +1938,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling update() specifying fields should update the
         fields requested. However, placeholders should not be quoted.
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         udata = [('frodo', 23, 199.7),
                  ('zippo', 14, 201.3),
@@ -1792,6 +1963,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling update() with an empty data list should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1808,6 +1980,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling update() with an empty field list should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1824,6 +1997,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling update() with an empty table name should get an
         exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1840,6 +2014,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling update() with an empty where arg should update
         all the rows
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         udata = [('frodo', 23, 199.7),
                  ('zippo', 14, 201.3),
@@ -1868,6 +2043,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling update() with a non-list as the fields argument
         should get an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1884,6 +2060,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling update() with a non-list data argument should get
         an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1916,6 +2093,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling update() with a non-string table argument should
         get an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1932,6 +2110,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling update() with a non-string where argument should
         get an exception
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1949,6 +2128,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling update() specifying where should update only the
         rows requested
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         udata = [('frodo', 23, 199.7),
                  ('zippo', 14, 201.3),
@@ -1976,6 +2156,7 @@ class DBI_out_Base(object):
         """
         DBI_out_Base: Set up for a delete test
         """
+        self.dbgfunc()
         flist = ['id integer primary key', 'name text', 'age int']
         testdata = {'tabname': 'test_table',
                     'flist': flist,
@@ -1998,7 +2179,6 @@ class DBI_out_Base(object):
 # -----------------------------------------------------------------------------
 class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     dbtype = 'mysql'
-    dbctype = 'crawler'
     pass
 
     # -------------------------------------------------------------------------
@@ -2007,9 +2187,8 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         DBImysqlTest:
         """
-        hx.cfg.add_config(filename="hpssic_mysql_test.cfg", close=True)
-        db = hx.dbi.DBI(dbtype=cls.dbctype)
-        db._dbobj.drop_test_tables()
+        hx.cfg.add_config(filename="mysql.cfg", close=True)
+        cls.drop_test_tables()
         # dbschem.drop_tables_matching("test_%")
 
     # -------------------------------------------------------------------------
@@ -2020,20 +2199,21 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         if not pytest.config.getvalue("keep"):
             # dbschem.drop_tables_matching("test_%")
-            db = hx.dbi.DBI(dbtype=cls.dbctype)
-            db.drop_test_tables()
+            cls.drop_test_tables()
 
     # -------------------------------------------------------------------------
-    def drop_test_tables(self):
+    @classmethod
+    def drop_test_tables(cls):
         """
         Drop tables like 'test_%'
         """
-        tlist = self.select(table='information_schema.tables',
-                            fields=['table_name'],
-                            where="table_name like 'test_%'")
+        pdb.set_trace()
+        db = DBI(cls.dbtype)
+        tl = db.table_list()
         for (tname,) in tlist:
             if self.table_exists(table=tname):
-                self.drop(table=tname)
+                print("would drop %s" % tname)
+        db.close()
 
 
     # -------------------------------------------------------------------------
@@ -2065,6 +2245,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBImysqlTest: Calling alter() to add a column with valid syntax should
         add the new column, honoring the *pos* argument
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
@@ -2087,6 +2268,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBImysqlTest: Calling alter() to add a column with an empty pos
         argument should add the new column at the end of the row
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
@@ -2109,6 +2291,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBImysqlTest: Calling alter() to drop a column with valid syntax should
         drop the column
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
@@ -2160,7 +2343,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.tblpfx_required,
                              hx.dbi.DBImysql,
-                             dbname='crawler')
+                             dbname='foobar')
 
     # -------------------------------------------------------------------------
     def test_dbschem_alter_table(self):
@@ -2208,7 +2391,11 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBImysqlTest: Test repr on a mysql database object, both open and
         closed
         """
-        exp = "DBImysql(dbname='hpssicccsornlgov_hpssic_prod')"
+        self.dbgfunc()
+        xcf = hx.cfg.CrawlConfig()
+        xcf.read('mysql.cfg')
+        section = xcf.sections()[0]
+        exp = "DBImysql(dbname='%s')" % xcf.get(section, 'dbname')
         a = self.DBI()
         self.expected(exp, repr(a))
         a.close()
@@ -2232,7 +2419,6 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
 # -----------------------------------------------------------------------------
 class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     dbtype = 'sqlite'
-    dbctype = 'crawler'
 
     # -------------------------------------------------------------------------
     def test_alter_add_after(self):
@@ -2262,6 +2448,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: Calling alter() to add a column with valid syntax should
         add column at end. Argument *pos* is ignored.
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
@@ -2283,6 +2470,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: Calling alter() to add a column with an empty pos
         argument should ignore pos arg and add column at end.
         """
+        self.dbgfunc()
         tname = util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
@@ -2335,6 +2523,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: File dbname exists and is a database file -- we will use
         it.
         """
+        self.dbgfunc()
         # first, we create a database file from scratch
         util.conditional_rm(self.dbname())
         tabname = util.my_name()
@@ -2361,6 +2550,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: File dbname exists and is a directory -- we throw an
         exception.
         """
+        self.dbgfunc()
         util.conditional_rm(self.dbname())
         os.mkdir(self.dbname(), 0777)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -2375,6 +2565,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: File dbname exists and is empty -- we will use it as a
         database.
         """
+        self.dbgfunc()
         util.conditional_rm(self.dbname())
         util.touch(self.dbname())
         db = self.DBI()
@@ -2392,6 +2583,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: File dbname exists and is a fifo -- we throw an
         exception
         """
+        self.dbgfunc()
         util.conditional_rm(self.dbname())
         os.mkfifo(self.dbname())
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -2406,6 +2598,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: Called with no dbname, constructor should throw
         exception
         """
+        self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.dbname_required,
                              hx.dbi.DBIsqlite)
@@ -2420,7 +2613,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.tblpfx_required,
                              hx.dbi.DBIsqlite,
-                             dbname='crawler')
+                             dbname='foobar')
 
     # -------------------------------------------------------------------------
     def test_ctor_dbn_nosuch(self):
@@ -2428,6 +2621,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: File dbname does not exist -- initializing a db
         connection to it should create it.
         """
+        self.dbgfunc()
         util.conditional_rm(self.dbname())
         db = self.DBI()
         db.close()
@@ -2438,6 +2632,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         DBIsqliteTest: File dbname is a socket -- we throw an exception
         """
+        self.dbgfunc()
         util.conditional_rm(self.dbname())
         sockname = self.tmpdir(util.my_name())
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -2456,6 +2651,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: File dbname exists is a symlink. We should react to what
         the symlink points at. If it's a directory, we throw an exception.
         """
+        self.dbgfunc()
         # the symlink points at a directory
         util.conditional_rm(self.dbname() + '_xyz')
         os.mkdir(self.dbname() + '_xyz', 0777)
@@ -2472,6 +2668,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: File dbname exists and is a symlink pointing at an empty
         file. We use it.
         """
+        self.dbgfunc()
         # the symlink points at a directory
         util.conditional_rm(self.dbname())
         util.conditional_rm(self.dbname() + '_xyz')
@@ -2493,6 +2690,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: File dbname exists and is a symlink pointing at a
         non-existent file. We create it.
         """
+        self.dbgfunc()
         # the symlink points at a non-existent file
         util.conditional_rm(self.dbname())
         util.conditional_rm(self.dbname() + '_xyz')
@@ -2513,6 +2711,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: File dbname exists and contains text. We should throw an
         exception
         """
+        self.dbgfunc()
         util.conditional_rm(self.dbname())
         f = open(self.dbname(), 'w')
         f.write('This is a text file, not a database file\n')
@@ -2522,7 +2721,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
                              "file is encrypted or is not a database",
                              hx.dbi.DBI,
                              cfg=make_tcfg(self.dbtype, self),
-                             dbtype='crawler')
+                             dbtype=self.dbtype)
 
         os.unlink(self.dbname())
 
@@ -2532,6 +2731,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: The DBIsqlite ctor requires 'dbname' and 'tbl_prefix' as
         keyword arguments
         """
+        self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "A database name is required",
                              hx.dbi.DBIsqlite,
@@ -2543,6 +2743,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: The DBIsqlite ctor requires 'tbl_prefix' as keyword
         arguments
         """
+        self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "A table prefix is required",
                              hx.dbi.DBIsqlite,
@@ -2554,6 +2755,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: The DBIsqlite ctor takes only 'dbname' and 'tbl_prefix'
         as keyword arguments
         """
+        self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "Attribute 'something' is not valid",
                              hx.dbi.DBIsqlite,
@@ -2562,72 +2764,9 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
                              something='fribble')
 
     # -------------------------------------------------------------------------
-    @pytest.mark.jenkins_fail
-    @pytest.mark.slow
-    def test_cvlib_lscos_populate(self):
-        """
-        Try running cv_sublib.lscos_populate(). It should create the lscos
-        table and populate it with data. Only available when we have hpss.
-        """
-        self.dbgfunc()
-        db = self.DBI()
-        try:
-            cv_sublib.lscos_populate()
-        except hpss.HSIerror as e:
-            if hx.msg.hpss_unavailable in str(e):
-                pytest.skip(str(e))
-        self.assertTrue(db.table_exists(table='lscos'),
-                        "Expected table 'lscos' to be present")
-        data = db.select(table="lscos",
-                         fields=['count(*)'])
-        self.assertTrue(0 != data[0][0],
-                        "Expected data to be present in table 'lscos'")
-
-    # -------------------------------------------------------------------------
-    def test_dbschem_alter_table(self):
-        """
-        DBIsqliteTest: Test dbschem.alter_table
-         - adding a column should work
-         - dropping a column should get an unsupported exception
-         - passing both addcol and dropcol should be a mutual exclusion
-           exception
-        """
-        tname = util.my_name()
-        tcfg = make_tcfg(self.dbtype, self)
-        db = self.DBI()
-        db.create(table=tname, fields=self.fdef)
-        db.close()
-        rv = dbschem.alter_table(table=tname,
-                                 addcol="missing int",
-                                 pos="first",
-                                 cfg=tcfg)
-        self.expected("Successful", rv)
-
-        db = self.DBI()
-        z = db.describe(table=tname)
-        db.close()
-        self.assertTrue(any(['missing' in x for x in z]),
-                        "Expected field 'missing' in %s" % repr(z))
-
-        self.assertRaisesMsg(hx.dbi.DBIerror,
-                             "SQLite does not support dropping columns",
-                             dbschem.alter_table,
-                             table=tname,
-                             dropcol="missing",
-                             cfg=tcfg)
-
-        self.assertRaisesMsg(hx.dbi.DBIerror,
-                             "addcol and dropcol are mutually exclusive",
-                             dbschem.alter_table,
-                             table=tname,
-                             addcol="missing int",
-                             dropcol="missing",
-                             cfg=tcfg)
-
-    # -------------------------------------------------------------------------
     def test_err_handler(self):
         """
-        Test the sqlite error handler method
+        DBIsqliteTest: Test the sqlite error handler method
         """
         self.dbgfunc()
         e = sqlite3.OperationalError("no such table: leapfrog")
@@ -2644,6 +2783,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         type, calling __repr__ on a DBI object should produce a representation
         that looks like a DBIsqlite object.
         """
+        self.dbgfunc()
         exp = "DBIsqlite(dbname='%s')" % self.dbname()
         a = self.DBI()
         self.expected(exp, repr(a))
@@ -2662,7 +2802,6 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
 # -----------------------------------------------------------------------------
 @pytest.mark.slow
 class DBIdb2Test(DBI_in_Base, DBITestRoot):
-    dbctype = 'hpss'   # the function of the database
     dbtype = 'db2'     # which database engine it uses
 
     # -------------------------------------------------------------------------
@@ -2700,6 +2839,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: The DB2 err handler will accept *err* (an exception object)
         or *message* (a string). It should alwasy raise a hx.dbi.DBIerror.
         """
+        self.dbgfunc()
         import ibm_db_dbi
         self.dbgfunc()
         testerrnum = 1438
@@ -2727,21 +2867,22 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Called with no dbname, constructor should throw exception
         """
         self.dbgfunc()
-        cfg = make_tcfg(self.dbtype, self)
-        cfg.remove_option('dbi-hpss', 'username')
-        cfg.remove_option('dbi-hpss', 'password')
+        (cfobj, section) = make_tcfg(self.dbtype, self)
+        cfobj.remove_option(section, 'username')
+        cfobj.remove_option(section, 'password')
         self.assertRaisesRegex(hx.dbi.DBIerror,
                                hx.msg.password_missing_rgx,
                                hx.dbi.DBI,
                                cfg,
                                dbtype=self.dbctype,
-                               dbname='cfg')
+                               dbname='nomatter')
 
     # -------------------------------------------------------------------------
     def test_ctor_dbname_none(self):
         """
         DBIdb2Test: Called with no dbname, constructor should throw exception
         """
+        self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.dbname_required,
                              hx.dbi.DBIdb2)
@@ -2753,40 +2894,32 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         exception
         """
         self.dbgfunc()
-        make_tcfg(self.dbtype, self)
-        db = hx.dbi.DBIdb2(dbname="cfg")
-        self.expected('hpss.', db.tbl_prefix)
-        db.close()
+        (cf, sect) = make_tcfg(self.dbtype, self)
+        cf.remove_option(sect, 'tbl_prefix')
+        self.assertRaisesMsg(hx.dbi.DBIerror,
+                             msg.missing_arg_S % 'tbl_prefix',
+                             hx.dbi.DBIdb2,
+                             dbname='cfg')
 
     # -------------------------------------------------------------------------
-    def test_ctor_dbtype_hpss_no_dbname(self):
+    def test_ctor_dbtype_db2_no_dbname(self):
         """
-        DBIdb2Test: With dbtype value 'hpss', no dbname, constructor should
+        DBIdb2Test: With dbtype value 'db2', no dbname, constructor should
         throw exception
         """
+        self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
-                             "With dbtype=hpss, dbname must be specified",
-                             hx.dbi.DBI,
-                             dbtype='hpss')
+                             "With dbtype=db2, dbname must be specified",
+                             hx.dbi.DBIdb2,
+                             dbtype='db2')
 
     # -------------------------------------------------------------------------
-    def test_ctor_dbtype_hpss_bad_dbname(self):
+    def test_ctor_dbtype_db2_dbname_sub_ok(self):
         """
-        DBIdb2Test: With dbtype value 'hpss', bad dbname, constructor should
-        throw exception
-        """
-        self.assertRaisesMsg(hx.dbi.DBIerror,
-                             "dbname frobble not defined in the configuration",
-                             hx.dbi.DBI,
-                             dbtype='hpss',
-                             dbname='frobble')
-
-    # -------------------------------------------------------------------------
-    def test_ctor_dbtype_hpss_dbname_sub_ok(self):
-        """
-        DBIdb2Test: With dbtype value 'hpss', good dbname, constructor should
+        DBIdb2Test: With dbtype value 'db2', good dbname, constructor should
         be okay
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertTrue(hasattr(db, "_dbobj"),
                         "%s: Expected attribute '_dbobj', not present" %
@@ -2808,6 +2941,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Passing a string of binary values to hexstr(), hexstr_uq()
         should get back the corresponding string of hex digits.
         """
+        self.dbgfunc()
         val = ('\x08\xe1"n\xff\xd2\xd9\x11\x80\x14\x10\x00Z\xfau\xbf\xa2' +
                '\xf9aj6\xfd\xd0\x11\x93\xcb\x00\x00\x00\x00\x00\x04')
         exp = ("08E1226EFFD2D911801410005AFA75BFA2F9616A36FDD01193CB" +
@@ -2822,6 +2956,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Passing a string of hex digits to hexval() should get back
         the corresponding binary string.
         """
+        self.dbgfunc()
         val = ("08E1226EFFD2D911801410005AFA75BFA2F9616A36FDD01193CB" +
                "000000000004")
         xval = "x" + val
@@ -2840,6 +2975,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         type, calling __repr__ on a DBI object should produce a representation
         that looks like a DBIsqlite object.
         """
+        self.dbgfunc()
         exp = "DBIdb2(dbname='cfg')"
         a = self.DBI()
         self.expected(exp, repr(a))
@@ -2853,8 +2989,10 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() specifying fields should get only the
         fields requested
         """
+        self.dbgfunc()
         db = self.DBI()
-        rows = db.select(table='hpss.cos',
+        tname = '%s.cos' % db._dbobj.tbl_prefix
+        rows = db.select(table=tname,
                          fields=['cos_id', 'hier_id'])
         self.expected(2, len(rows[0].keys()))
         for exp in ['HIER_ID', 'COS_ID']:
@@ -2869,8 +3007,10 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Select with a group by clause on a field that is present in
         the table.
         """
+        self.dbgfunc()
         db = self.DBI(dbname='sub')
-        rows = db.select(table='hpss.bitfile',
+        tname = '%s.bitfile' % db._dbobj.tbl_prefix
+        rows = db.select(table=tname,
                          fields=['max(bfid) as mbf',
                                  'bfattr_cos_id'],
                          groupby='bfattr_cos_id')
@@ -2887,12 +3027,14 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Select with a group by clause that is not a string --
         should get an exception.
         """
+        self.dbgfunc()
         db = self.DBI(dbname='sub')
         exp = "On select(), groupby clause must be a string"
+        tname = '%s.bitfile' % db._dbobj.tbl_prefix
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              exp,
                              db.select,
-                             table='hpss.bitfile',
+                             table=tname,
                              fields=['max(bfid) as mbf',
                                      'bfattr_cos_id'],
                              groupby=17)
@@ -2906,11 +3048,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         self.dbgfunc()
         db = self.DBI(dbname='sub')
+        tname = db.prefix('bitfile')
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              '"UNKNOWN_FIELD" is not valid in the context ' +
                              'where it',
                              db.select,
-                             table="hpss.bitfile",
+                             table=db.prefix('bitfile'),
                              fields=['max(bfid) as mbf',
                                      'bfattr_cos_id'],
                              groupby='unknown_field')
@@ -2921,6 +3064,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         DBIdb2Test: Select should support joining tables.
         """
+        self.dbgfunc()
         db = self.DBI(dbname='sub')
         rows = db.select(table=['nsobject', 'bitfile'],
                          fields=['object_id',
@@ -2938,6 +3082,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Select should support joining tables with temporary table
         names.
         """
+        self.dbgfunc()
         db = self.DBI(dbname='sub')
         rows = db.select(table=['nsobject A', 'bitfile B'],
                          fields=['A.object_id',
@@ -2954,6 +3099,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         DBIdb2Test: select with limit not an int should throw an exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), limit must be an int",
@@ -2971,9 +3117,10 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: select with limit being an int should retrieve the
         indicated number of records
         """
+        self.dbgfunc()
         db = self.DBI(dbname='sub')
         rlim = 3
-        rows = db.select(table='hpss.nsobject',
+        rows = db.select(table=db.prefix('nsobject'),
                          fields=["object_id",
                                  "name",
                                  "bitfile_id"],
@@ -2987,9 +3134,10 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: select with limit being a float should convert the value to
         an int (without rounding) and retrieve that number of records
         """
+        self.dbgfunc()
         db = self.DBI(dbname='sub')
         rlim = 4.5
-        rows = db.select(table='hpss.nsobject',
+        rows = db.select(table=db.prefix('nsobject'),
                          fields=["object_id",
                                  "name",
                                  "bitfile_id"],
@@ -3003,11 +3151,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() with an empty field list should get an
         exception -- an empty field list indicates the wildcard option
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.wildcard_selects,
                              db.select,
-                             table="hpss.cos",
+                             table=db.prefix("cos"),
                              fields=[])
         db.close()
 
@@ -3018,11 +3167,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         -- fields should default to the empty list, indicating the wildcard
         option, which is not supported
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.wildcard_selects,
                              db.select,
-                             table='hpss.pvlpv')
+                             table=db.prefix('pvlpv'))
         db.close()
 
     # -------------------------------------------------------------------------
@@ -3031,11 +3181,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() with an empty orderby should get the data
         in the same order as using no orderby at all.
         """
+        self.dbgfunc()
         db = self.DBI(dbname='sub')
-        ordered_rows = db.select(table='hpss.bitfile',
+        ordered_rows = db.select(table=db.prefix('bitfile'),
                                  fields=['bfid'],
                                  orderby='')
-        unordered_rows = db.select(table='hpss.bitfile',
+        unordered_rows = db.select(table=db.prefix('bitfile'),
                                    fields=['bfid'])
         okl = [CrawlDBI.DBIdb2.hexstr(x['BFID'])
                for x in ordered_rows]
@@ -3050,6 +3201,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() with an empty table name should get an
         exception
         """
+        self.dbgfunc()
         db = self.DBI()
         exp = "On select(), table name must not be empty"
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -3067,10 +3219,11 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() with an empty where arg should get the
         same data as no where arg at all
         """
+        self.dbgfunc()
         db = self.DBI(dbname='sub')
         flist = ['object_id', 'name', 'bitfile_id']
-        w_rows = db.select(table='hpss.nsobject', fields=flist, where='')
-        x_rows = db.select(table='hpss.nsobject', fields=flist)
+        w_rows = db.select(table=db.prefix('nsobject'), fields=flist, where='')
+        x_rows = db.select(table=db.prefix('nsobject'), fields=flist)
         self.expected(len(x_rows), len(w_rows))
         for exp, actual in zip(x_rows, w_rows):
             self.expected(actual, exp)
@@ -3082,11 +3235,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() with a non-tuple as the data argument
         should get an exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), data must be a tuple",
                              db.select,
-                             table="hpss.bitfile",
+                             table=db.prefix("bitfile"),
                              fields=self.fnames,
                              where="desc_name = ?",
                              data='prudhoe')
@@ -3098,11 +3252,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() with a non-list as the fields argument
         should get an exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), fields must be a list",
                              db.select,
-                             table="hpss.bitfile",
+                             table=db.prefix("bitfile"),
                              fields=92,
                              where="desc_name = ?",
                              data=('prudhoe', ))
@@ -3114,11 +3269,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() with where clause with no '?' and data in
         the list should get an exception -- the data would be ignored
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "Data would be ignored",
                              db.select,
-                             table="hpss.bitfile",
+                             table=db.prefix("bitfile"),
                              fields=self.fnames,
                              where="desc_name = ''",
                              data=('prudhoe', ))
@@ -3130,9 +3286,10 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() with where with no '?' and an empty data
         list is fine. The data returned should match the where clause.
         """
+        self.dbgfunc()
         db = self.DBI(dbname='sub')
         crit = 'logfile'
-        rows = db.select(table='hpss.nsobject',
+        rows = db.select(table=db.prefix('nsobject'),
                          fields=['name', 'object_id', 'bitfile_id'],
                          where="name like '%%%s%%'" % crit,
                          data=())
@@ -3148,11 +3305,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() with a non-string orderby argument should
         get an exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), orderby clause must be a string",
                              db.select,
-                             table="hpss.bitfile",
+                             table=db.prefix("bitfile"),
                              fields=['bfid'],
                              orderby=22)
         db.close()
@@ -3163,6 +3321,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() with a non-string table argument should
         get an exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), table name must be a string",
@@ -3178,11 +3337,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() with a non-string where argument should
         get an exception
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), where clause must be a string",
                              db.select,
-                             table="hpss.nsobject",
+                             table=db.prefix("nsobject"),
                              fields=['name',
                                      'object_id',
                                      'bitfile_id'],
@@ -3195,8 +3355,9 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() specifying orderby should get the rows in
         the order requested
         """
+        self.dbgfunc()
         db = self.DBI(dbname='sub')
-        ordered_rows = db.select(table='hpss.bitfile',
+        ordered_rows = db.select(table=db.prefix('bitfile'),
                                  fields=['bfid'],
                                  orderby='bfid')
 
@@ -3215,9 +3376,10 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() with a where clause containing '?' and
         data in the data list should return the data matching the where clause
         """
+        self.dbgfunc()
         db = self.DBI(dbname='sub')
         crit = 'logfile'
-        rows = db.select(table='hpss.nsobject',
+        rows = db.select(table=db.prefix('nsobject'),
                          fields=['name', 'object_id', 'bitfile_id'],
                          where="name like '%?%'",
                          data=(crit,))
@@ -3238,7 +3400,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "0 params bound not matching 1 required",
                              db.select,
-                             table="hpss.bitfile",
+                             table=db.prefix("bitfile"),
                              fields=['bfid'],
                              data=(),
                              where="DESC_NAME = ?")
@@ -3250,9 +3412,10 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Calling select() specifying where should get only the rows
         requested
         """
+        self.dbgfunc()
         db = self.DBI(dbname='sub')
         crit = 'logfile'
-        rows = db.select(table='hpss.nsobject',
+        rows = db.select(table=db.prefix('nsobject'),
                          fields=['name', 'object_id', 'bitfile_id'],
                          where="name like '%%%s%%'" % crit)
         for x in rows:
@@ -3266,6 +3429,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         DBIdb2Test: For a table that exists, table_exists() should return True.
         """
+        self.dbgfunc()
         db = self.DBI()
         self.expected(True, db.table_exists(table='cartridge'))
         db.close()
@@ -3276,6 +3440,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: For a table that does not exist, table_exists() should
         return False.
         """
+        self.dbgfunc()
         db = self.DBI()
         self.expected(False, db.table_exists(table='nonesuch'))
         db.close()
@@ -3285,11 +3450,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         DBIdb2Test: On a db2 database, insert should throw an exception.
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.db2_unsupported_S % "INSERT",
                              db.insert,
-                             table="hpss.bogus",
+                             table=db.prefix("bogus"),
                              data=[('a', 'b', 'c')])
         db.close()
 
@@ -3298,11 +3464,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         DBIdb2Test: On a db2 database, create should throw an exception.
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.db2_unsupported_S % "CREATE",
                              db.create,
-                             table="hpss.nonesuch",
+                             table=db.prefix("nonesuch"),
                              fields=self.fdef)
         db.close()
 
@@ -3311,11 +3478,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         DBIdb2Test: On a db2 database, delete should throw an exception.
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.db2_unsupported_S % "DELETE",
                              db.delete,
-                             table="hpss.bogus",
+                             table=db.prefix("bogus"),
                              data=[('a',)],
                              where="field = ?")
         db.close()
@@ -3325,11 +3493,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         DBIdb2Test: On a db2 database, drop should throw an exception.
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.db2_unsupported_S % "DROP",
                              db.drop,
-                             table="hpss.bogus")
+                             table=db.prefix("bogus"))
         db.close()
 
     # -------------------------------------------------------------------------
@@ -3337,11 +3506,12 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         DBIdb2Test: On a db2 database, update should throw an exception.
         """
+        self.dbgfunc()
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.db2_unsupported_S % "UPDATE",
                              db.update,
-                             table="hpss.bogus",
+                             table=db.prefix("bogus"),
                              fields=['one', 'two'],
                              data=[('a', 'b', 'c')],
                              where="one = ?")
