@@ -1,5 +1,6 @@
 DODO.org
 TAGS
+.ackrc
 *.pyc
 *.log
 *.cfg

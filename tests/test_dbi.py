@@ -226,7 +226,7 @@ class DBITest(DBITestRoot):
                              "is required",
                              hx.dbi.DBI,
                              dbtype='sqlite',
-                             dbname='test.db')
+                             dbname=self.dbname())
 
     # -------------------------------------------------------------------------
     def test_ctor_no_hostname(self):
@@ -241,7 +241,7 @@ class DBITest(DBITestRoot):
                              "is required",
                              hx.dbi.DBI,
                              dbtype='mysql',
-                             dbname='test.db',
+                             dbname=self.dbname(),
                              tbl_prefix='test')
 
     # -------------------------------------------------------------------------
@@ -257,7 +257,7 @@ class DBITest(DBITestRoot):
                              "is required",
                              hx.dbi.DBI,
                              dbtype='mysql',
-                             dbname='test.db',
+                             dbname=self.dbname(),
                              tbl_prefix='test',
                              hostname='something.meaningless.org')
 
@@ -274,7 +274,7 @@ class DBITest(DBITestRoot):
                              "is required",
                              hx.dbi.DBI,
                              dbtype='mysql',
-                             dbname='test.db',
+                             dbname=self.dbname(),
                              tbl_prefix='test',
                              hostname='something.meaningless.org',
                              username='somebody')
@@ -304,7 +304,8 @@ class DBITest(DBITestRoot):
         """
         self.dbgfunc()
 
-        (cf, section) = make_tcfg(dbtype='sqlite', dbname='test.db')
+        (cf, section) = make_tcfg(dbtype='sqlite',
+                                  dbname=self.dbname())
         a = hx.dbi.DBI(cfg=cf, section=section)
         a.close()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -331,7 +332,7 @@ class DBITest(DBITestRoot):
         DBI does not hand us back a mysql connection.
         """
         self.dbgfunc()
-        (cfobj, section) = make_tcfg(dbtype='sqlite', dbname='test.db')
+        (cfobj, section) = make_tcfg(dbtype='sqlite', dbname=self.dbname())
         a = hx.dbi.DBI(cfg=cfobj, section=section)
         self.assertTrue(hasattr(a, '_dbobj'),
                         "Expected to find a _dbobj attribute on %s" % a)
