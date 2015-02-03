@@ -125,10 +125,10 @@ def pytest_unconfigure(config):
     We're on our way out -- write the test summary to the log file
     """
     hx_test_log(config,
-                    "passed: %d; skipped: %d; FAILED: %d" %
-                    (hx_test_log._passcount,
-                     hx_test_log._skipcount,
-                     hx_test_log._failcount))
+                "passed: %d; skipped: %d; FAILED: %d" %
+                (hx_test_log._passcount,
+                 hx_test_log._skipcount,
+                 hx_test_log._failcount))
 
 
 hx_test_log._logpath = "tests/hx_test.log"

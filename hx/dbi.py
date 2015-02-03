@@ -374,6 +374,7 @@ class DBI(object):
             raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         return self._dbobj.update(**kwargs)
 
+
 # -----------------------------------------------------------------------------
 class DBIerror(Exception):
     """
@@ -400,6 +401,9 @@ class DBIsqlite(DBI_abstract):
     # -------------------------------------------------------------------------
     @classmethod
     def arginfo(cls):
+        """
+        Set required and optional arguments for sqlite db connections
+        """
         return {'req': ['dbname', 'tbl_prefix'],
                 'opt': []}
 
@@ -789,6 +793,9 @@ if mysql_available:
         # ---------------------------------------------------------------------
         @classmethod
         def arginfo(cls):
+            """
+            Set required and optional arguments for mysql db connections
+            """
             return {'req': ['dbname', 'tbl_prefix',
                             'hostname', 'username', 'password'],
                     'opt': [('timeout', 3600)]}
@@ -1226,6 +1233,9 @@ if db2_available:
         # -------------------------------------------------------------------------
         @classmethod
         def arginfo(self):
+            """
+            Set required and optional arguments for db2 connections
+            """
             return {'req': ['dbname', 'tbl_prefix', 'hostname', 'port',
                             'username', 'password'],
                     'opt': [('timeout', 3600)]}
@@ -1275,7 +1285,7 @@ if db2_available:
                 if not hasattr(self, 'sleeptime'):
                     self.sleeptime = 0.1
                 cfg.log('Riding out DB2 outage -- sleeping %f seconds'
-                                % self.sleeptime)
+                        % self.sleeptime)
                 time.sleep(self.sleeptime)
                 self.sleeptime = min(2*self.sleeptime, 60.0)
             else:
@@ -1486,7 +1496,6 @@ if db2_available:
                     raise DBIerror(errmsg, dbname=self.dbname)
                 else:
                     raise
-
 
         # ---------------------------------------------------------------------
         def update(self, table='', where='', fields=[], data=[]):

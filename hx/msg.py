@@ -1,3 +1,5 @@
+cov_no_data = ("Coverage.py warning: No data was collected.\r\n")
+
 db_closed = ("Cannot operate on a closed database")
 
 dbname_cfg_required = ("A dbname or cfg object and section name is required" +

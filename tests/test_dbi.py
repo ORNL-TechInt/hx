@@ -1889,7 +1889,7 @@ class DBI_out_Base(object):
         self.dbgfunc()
         db = self.DBI()
         pre = db.table_list()
-        count = random.randint(4,9)
+        count = random.randint(4, 9)
         for n in range(count):
             rname = hx.util.rstring(8, 12)
             rn.append(rname)
@@ -1901,7 +1901,6 @@ class DBI_out_Base(object):
 
         for rname in rn:
             db.drop(table=rname)
-
 
     # -------------------------------------------------------------------------
     def test_update_f(self):
@@ -2214,7 +2213,6 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
             if self.table_exists(table=tname):
                 print("would drop %s" % tname)
         db.close()
-
 
     # -------------------------------------------------------------------------
     def test_alter_add_after(self):

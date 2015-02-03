@@ -110,7 +110,7 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
         Routines exercised: __init__(), dump().
         """
         obj = hx.cfg.CrawlConfig.dictor(self.sample,
-                                             defaults={'goose': 'honk'})
+                                        defaults={'goose': 'honk'})
         dumpstr = obj.dump()
 
         self.assertFalse("[DEFAULT]" in dumpstr)
@@ -737,12 +737,12 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
         """
         self.dbgfunc()
         obj = hx.cfg.CrawlConfig.dictor({'crawler': {'dsec': '10s',
-                                                          'fsec': '5.0 s',
-                                                          'nzmin': '.25min',
-                                                          'lzhour': '0.1 hr',
-                                                          'fday': '7.0d',
-                                                          },
-                                              })
+                                                     'fsec': '5.0 s',
+                                                     'nzmin': '.25min',
+                                                     'lzhour': '0.1 hr',
+                                                     'fday': '7.0d',
+                                                     },
+                                         })
         self.expected(10, obj.get_time('crawler', 'dsec'))
         self.expected(5, obj.get_time('crawler', 'fsec'))
         self.expected(15, obj.get_time('crawler', 'nzmin'))
@@ -1785,9 +1785,9 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
                 94,
                 23.12348293402]
         exp = U.my_name() + ": " + argl[0] % (argl[1],
-                                                 argl[2],
-                                                 argl[3],
-                                                 17.9)
+                                              argl[2],
+                                              argl[3],
+                                              17.9)
         self.assertRaisesMsg(TypeError,
                              "not enough arguments for format string",
                              hx.cfg.log,
