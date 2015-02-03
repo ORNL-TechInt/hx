@@ -35,7 +35,12 @@ import warnings
 
 
 # ------------------------------------------------------------------------------
-def add_config(filename=None, cfg=None, dct=None, close=False):
+def add_config(filename=None,
+               cfg=None,
+               dct=None,
+               close=False,
+               env=None,
+               default_filename=None):
     """
     If close and everything else is None, destroy the config and return None
 
@@ -60,7 +65,7 @@ def add_config(filename=None, cfg=None, dct=None, close=False):
         if not hasattr(get_config, '_config'):
             get_config._config = defaults()
         get_config._config.read(filename)
-        get_config._config.set('crawler', 'filename', filename)
+        # get_config._config.set('meta', 'filename', filename)
         return get_config._config
     elif cfg:
         if hasattr(get_config, '_config'):
@@ -79,24 +84,25 @@ def add_config(filename=None, cfg=None, dct=None, close=False):
     elif not close and hasattr(get_config, '_config'):
         return get_config._config
 
-    filename = os.getenv('CRAWL_CONF')
+    if env:
+        filename = os.getenv(env)
     if filename is None:
-        filename = 'crawl.cfg'
+        filename = default_filename
 
     if not os.path.exists(filename):
         raise SystemExit("""
         No configuration found. Please do one of the following:
-         - cd to a directory with an appropriate crawl.cfg file,
-         - create crawl.cfg in the current working directory,
-         - set $CRAWL_CONF to the path of a valid crawler configuration, or
+         - cd to a directory with an appropriate %s file,
+         - create %s in the current working directory,
+         - set $%s to the path of a valid crawler configuration, or
          - use --cfg to specify a configuration file on the command line.
-        """)
+        """ % (default_filename, default_filename, env))
     elif not os.access(filename, os.R_OK):
         raise HpssicError("%s is not readable" % filename)
 
     rval = defaults()
     rval.read(filename)
-    rval.set('crawler', 'filename', filename)
+    # rval.set('meta', 'filename', filename)
     get_config._config = rval
     return rval
 
@@ -732,6 +738,12 @@ class CrawlConfig(ConfigParser.ConfigParser):
                 wmsg = "Some config files not loaded: %s" % ", ".join(unparsed)
                 warnings.warn(wmsg)
             pending = self.update_include_list()   # update dict self.incl
+
+        try:
+            self.set('cfgmeta', 'filename', filename)
+        except NoSectionError:
+            self.add_section('cfgmeta')
+            self.set('cfgmeta', 'filename', filename)
 
     # -------------------------------------------------------------------------
     def update_include_list(self):
