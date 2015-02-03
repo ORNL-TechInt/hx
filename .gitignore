@@ -3,4 +3,5 @@ TAGS
 *.pyc
 *.log
 *.cfg
+*#*#
 .#*

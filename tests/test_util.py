@@ -149,7 +149,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         # make sure the target env variable is not defined
         with util.tmpenv(evname, None):
             # create a config object with an 'env' section and a '+' option
-            cfg = CrawlConfig.CrawlConfig()
+            cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, '+' + add)
 
@@ -178,7 +178,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         with util.tmpenv(evname, pre_val):
             # create a config object with an 'env' section and a folded '+'
             # option
-            cfg = CrawlConfig.CrawlConfig()
+            cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, '+' + add)
 
@@ -204,7 +204,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         # make sure the target env variable is not defined
         with util.tmpenv(evname, None):
             # create a config object with an 'env' section and a '+' option
-            cfg = CrawlConfig.CrawlConfig()
+            cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, '+' + add)
 
@@ -231,7 +231,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         # make sure the target env variable is set to a known value
         with util.tmpenv(evname, pre_val):
             # create a config object with an 'env' section and a '+' option
-            cfg = CrawlConfig.CrawlConfig()
+            cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, "+" + add)
 
@@ -259,7 +259,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         # make sure the target env variable is not defined
         with util.tmpenv(evname, None):
             # create a config object with an 'env' section and a non-'+' option
-            cfg = CrawlConfig.CrawlConfig()
+            cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, newval)
 
@@ -287,7 +287,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         # make sure the target env variable is set to a known value
         with util.tmpenv(evname, pre_val):
             # create a config object with an 'env' section and a non-'+' option
-            cfg = CrawlConfig.CrawlConfig()
+            cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, add)
 
@@ -317,7 +317,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         # make sure the target env variable is not defined
         with util.tmpenv(evname, None):
             # create a config object with an 'env' section and a non-'+' option
-            cfg = CrawlConfig.CrawlConfig()
+            cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, exp)
 
@@ -345,7 +345,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         # make sure the target env variable is set to a known value
         with util.tmpenv(evname, pre_val):
             # create a config object with an 'env' section and a non-'+' option
-            cfg = CrawlConfig.CrawlConfig()
+            cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, add)
 

@@ -407,8 +407,8 @@ class HelpedTestCase(unittest.TestCase):
         Complain if the 'crawler' section is not present.
         """
         if isinstance(cfgdict, dict):
-            cfobj = cfg.CrawlConfig.dictor(cfgdict)
-        elif isinstance(cfgdict, cfg.CrawlConfig):
+            cfobj = cfg.config.dictor(cfgdict)
+        elif isinstance(cfgdict, cfg.config):
             cfobj = cfgdict
         else:
             raise StandardError("cfgdict has invalid type %s" % type(cfgdict))

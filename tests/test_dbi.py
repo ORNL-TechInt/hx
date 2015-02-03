@@ -52,7 +52,7 @@ def make_db2_tcfg(**kw):
     Construct and return a config object for a db2 database. Arguments were
     checked by make_tcfg so we don't need to check them here.
     """
-    tcfg = hx.cfg.CrawlConfig()
+    tcfg = hx.cfg.config()
     xcfg = hx.cfg.add_config('db2.cfg', close=True)
     section = xcfg.sections()[0]
     tcfg.add_section(section)
@@ -69,7 +69,7 @@ def make_mysql_tcfg(**kw):
     Construct and return a config object for a mysql database. Arguments were
     checked by make_tcfg so we don't need to check them here.
     """
-    tcfg = hx.cfg.CrawlConfig()
+    tcfg = hx.cfg.config()
     xcfg = hx.cfg.add_config(filename='mysql.cfg', close=True)
     section = xcfg.sections()[0]
     tcfg.add_section(section)
@@ -2186,7 +2186,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         DBImysqlTest:
         """
-        hx.cfg.add_config(filename="mysql.cfg", close=True)
+        # hx.cfg.add_config(filename="mysql.cfg", close=True)
         cls.drop_test_tables()
         # dbschem.drop_tables_matching("test_%")
 
@@ -2207,7 +2207,9 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         Drop tables like 'test_%'
         """
         pdb.set_trace()
-        db = DBI(cls.dbtype)
+        cf = hx.cfg.add_config(filename="mysql.cfg", close=True)
+        sect = [x for x in cf.sections() if x != cf.meta_section()][0]
+        db = hx.dbi.DBI(cfg=cf, section=sect)
         tl = db.table_list()
         for (tname,) in tlist:
             if self.table_exists(table=tname):
@@ -2390,7 +2392,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         closed
         """
         self.dbgfunc()
-        xcf = hx.cfg.CrawlConfig()
+        xcf = hx.cfg.config()
         xcf.read('mysql.cfg')
         section = xcf.sections()[0]
         exp = "DBImysql(dbname='%s')" % xcf.get(section, 'dbname')

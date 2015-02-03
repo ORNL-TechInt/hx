@@ -7,7 +7,7 @@ dbname_cfg_required = ("A dbname or cfg object and section name is required" +
 
 dbtype_required = ("A dbtype is required")
 
-default_int_float = ("CrawlConfig.get_time: default must be int or float")
+default_int_float = ("config.get_time: default must be int or float")
 
 default_piddir = ("/tmp/crawler")
 

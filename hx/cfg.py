@@ -3,7 +3,7 @@ Configuration class for crawl.py
 
 This class is based on python's standard ConfigParser class. It adds
 
-    1) a function to manage and return a singleton config object (get_config)
+    1) a function to manage and return a singleton config object (add_config)
 
     2) sensitivity to updates to the underlying configuration file (changed)
 
@@ -11,8 +11,8 @@ This class is based on python's standard ConfigParser class. It adds
     '2hr', '7 minutes', etc., but is presented to the caller as a number of
     seconds.
 
-    4) a boolean handler which returns False if the option does not exist
-    (rather than throwing an exception)
+    4) a boolean handler which returns False if the option (or section) does
+    not exist (rather than throwing an exception)
 
 """
 import ConfigParser
@@ -65,7 +65,6 @@ def add_config(filename=None,
         if not hasattr(get_config, '_config'):
             get_config._config = defaults()
         get_config._config.read(filename)
-        # get_config._config.set('meta', 'filename', filename)
         return get_config._config
     elif cfg:
         if hasattr(get_config, '_config'):
@@ -79,7 +78,7 @@ def add_config(filename=None,
         if hasattr(get_config, '_config'):
             get_config._config.sum_dict(dct)
         else:
-            get_config._config = CrawlConfig.dictor(dct)
+            get_config._config = config.dictor(dct)
         return get_config._config
     elif not close and hasattr(get_config, '_config'):
         return get_config._config
@@ -102,7 +101,6 @@ def add_config(filename=None,
 
     rval = defaults()
     rval.read(filename)
-    # rval.set('meta', 'filename', filename)
     get_config._config = rval
     return rval
 
@@ -110,12 +108,12 @@ def add_config(filename=None,
 # ------------------------------------------------------------------------------
 def defaults():
     """
-    Return a CrawlConfig object with the standard defaults set
+    Return a config object with the standard defaults set
     """
-    rval = CrawlConfig({'fire': 'no',
-                        'frequency': '3600',
-                        'pid': "%05d" % os.getpid(),
-                        'heartbeat': '10'})
+    rval = config({'fire': 'no',
+                   'frequency': '3600',
+                   'pid': "%05d" % os.getpid(),
+                   'heartbeat': '10'})
     return rval
 
 
@@ -124,15 +122,14 @@ def get_config(cfname='', reset=False, soft=False):
     """
     @DEPRECATED@
     Open the config file based on cfname, $CRAWL_CONF, or the default, in that
-    order. Construct a CrawlConfig object, cache it, and return it. Subsequent
+    order. Construct a config object, cache it, and return it. Subsequent
     calls will retrieve the cached object unless reset=True, in which case the
     old object is destroyed and a new one is constructed.
 
     If reset is True and soft is True, we delete any old cached object but do
     not create a new one.
 
-    Note that values in the default dict passed to CrawlConfig
-    must be strings.
+    Note that values in the default dict passed to config must be strings.
     """
     if reset:
         try:
@@ -163,9 +160,9 @@ def get_config(cfname='', reset=False, soft=False):
             """)
         elif not os.access(cfname, os.R_OK):
             raise StandardError("%s is not readable" % cfname)
-        rval = CrawlConfig({'fire': 'no',
-                            'frequency': '3600',
-                            'heartbeat': '10'})
+        rval = config({'fire': 'no',
+                       'frequency': '3600',
+                       'heartbeat': '10'})
         rval.read(cfname)
         rval.set('crawler', 'filename', cfname)
         get_config._config = rval
@@ -327,7 +324,7 @@ def pid_dir():
 
 
 # ------------------------------------------------------------------------------
-class CrawlConfig(ConfigParser.ConfigParser):
+class config(ConfigParser.ConfigParser):
     """
     See the module description for information on this class.
     """
@@ -512,7 +509,7 @@ class CrawlConfig(ConfigParser.ConfigParser):
         *defaults*, it will be forwarded to __init__() as the defaults dict for
         initializing the _defaults member of the object.
         """
-        rval = CrawlConfig(defaults=defaults)
+        rval = config(defaults=defaults)
 
         # Now fill the config with the material from the dict
         for s in sorted(dict.keys()):
@@ -583,6 +580,15 @@ class CrawlConfig(ConfigParser.ConfigParser):
                 raise ValueError(msg.invalid_time_unit_S % spec)
 
         return rval
+
+    # -------------------------------------------------------------------------
+    @classmethod
+    def meta_section(cls):
+        """
+        Set the meta section name where filename and any other metadata for the
+        configuration will be held
+        """
+        return 'cfgmeta'
 
     # -------------------------------------------------------------------------
     def qt_parse(self, spec):
@@ -740,10 +746,10 @@ class CrawlConfig(ConfigParser.ConfigParser):
             pending = self.update_include_list()   # update dict self.incl
 
         try:
-            self.set('cfgmeta', 'filename', filename)
+            self.set(self.meta_section(), 'filename', filename)
         except NoSectionError:
-            self.add_section('cfgmeta')
-            self.set('cfgmeta', 'filename', filename)
+            self.add_section(self.meta_section())
+            self.set(self.meta_section(), 'filename', filename)
 
     # -------------------------------------------------------------------------
     def update_include_list(self):
