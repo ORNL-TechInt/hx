@@ -357,7 +357,9 @@ class HelpedTestCase(unittest.TestCase):
         if stn in dbgopt or '.all' in dbgopt:
             pdb.set_trace()
 
-        if self._testMethodName in dbgopt or "all" in dbgopt:
+        fullname = "%s.%s" % (self.__class__, self._testMethodName)
+        if any([x in fullname for x in dbgopt] +
+               ["all" in dbgopt]):
             self.dbgfunc = pdb.set_trace
         else:
             self.dbgfunc = lambda: None

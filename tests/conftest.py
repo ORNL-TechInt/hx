@@ -69,8 +69,8 @@ def pytest_runtest_setup(item):
     if dbg_n in dbg_l or '..all' in dbg_l:
         pdb.set_trace()
 
-    if any([item.name in item.config.getoption('--dbg'),
-            'all' in item.config.getoption('--dbg')]):
+    dbgl = item.config.getoption('--dbg')
+    if any([x in item.name for x in dbgl] + ['all' in dbgl]):
         pytest.dbgfunc = pdb.set_trace
     else:
         pytest.dbgfunc = lambda: None
