@@ -143,7 +143,7 @@ class DBITestRoot(hx.testhelp.HelpedTestCase):
         DBITestRoot:
         """
         self.reset_db(table_name)
-        util.conditional_rm(self.dbname())
+        hx.util.conditional_rm(self.dbname())
         db = self.DBI()
         db.create(table=table_name, fields=self.fdef)
         db.insert(table=table_name, fields=self.nk_fnames, data=self.testdata)
@@ -427,7 +427,7 @@ class DBI_in_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name()
+        tname = hx.util.my_name()
         db = self.DBI()
         db.close()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -441,7 +441,7 @@ class DBI_in_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name()
+        tname = hx.util.my_name()
         db = self.DBI()
         db.close()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -456,7 +456,7 @@ class DBI_in_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name()
+        tname = hx.util.my_name()
         db = self.DBI()
         db.close()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -543,7 +543,7 @@ class DBI_in_Base(object):
         fields requested
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
         rows = db.select(table=tname, fields=['size', 'weight'])
@@ -552,7 +552,7 @@ class DBI_in_Base(object):
             self.assertTrue((tup[1], tup[2]) in rows,
                             "Expected %s in %s but it's not there" %
                             (str((tup[1], tup[2], )),
-                             util.line_quote(str(rows))))
+                             hx.util.line_quote(str(rows))))
 
     # -------------------------------------------------------------------------
     def test_select_gb_f(self):
@@ -561,7 +561,7 @@ class DBI_in_Base(object):
         in the table.
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
         rows = db.select(table=tname, fields=['sum(size)'], groupby='name')
@@ -577,7 +577,7 @@ class DBI_in_Base(object):
         should get an exception.
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -594,7 +594,7 @@ class DBI_in_Base(object):
         should get an exception.
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         ns_field = 'fiddle'
 
@@ -614,7 +614,7 @@ class DBI_in_Base(object):
         list is fine. The data returned should match the where clause.
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
         rows = db.select(table=tname, fields=self.nk_fnames,
@@ -629,7 +629,7 @@ class DBI_in_Base(object):
         empty data list should get an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         if self.dbtype == 'mysql':
             exctype = TypeError
@@ -653,7 +653,7 @@ class DBI_in_Base(object):
         the list should get an exception -- the data would be ignored
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -671,7 +671,7 @@ class DBI_in_Base(object):
         data in the data list should return the data matching the where clause
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
         rows = db.select(table=tname, fields=self.nk_fnames,
@@ -685,7 +685,7 @@ class DBI_in_Base(object):
         DBI_in_Base: select with limit not an int should throw exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace("test_", "")
+        tname = hx.util.my_name().replace("test_", "")
         self.setup_select(tname)
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -702,7 +702,7 @@ class DBI_in_Base(object):
         specified number of records
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
         rlim = 3
@@ -712,7 +712,7 @@ class DBI_in_Base(object):
         for tup in self.testdata[0:int(rlim)]:
             self.assertTrue(tup in rows,
                             "Expected %s in %s but it's not there" %
-                            (str(tup), util.line_quote(rows)))
+                            (str(tup), hx.util.line_quote(rows)))
 
     # -------------------------------------------------------------------------
     def test_select_l_float(self):
@@ -721,7 +721,7 @@ class DBI_in_Base(object):
         float to an int (without rounding) and use it
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
         rlim = 2.7
@@ -731,7 +731,7 @@ class DBI_in_Base(object):
         for tup in self.testdata[0:int(rlim)]:
             self.assertTrue(tup in rows,
                             "Expected %s in %s but it's not there" %
-                            (str(tup), util.line_quote(rows)))
+                            (str(tup), hx.util.line_quote(rows)))
 
     # -------------------------------------------------------------------------
     def test_select_mtf(self):
@@ -740,7 +740,7 @@ class DBI_in_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -756,7 +756,7 @@ class DBI_in_Base(object):
         in the order inserted
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
         rows = db.select(table=tname, fields=self.nk_fnames, orderby='')
@@ -770,7 +770,7 @@ class DBI_in_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), table name must not be empty",
@@ -785,7 +785,7 @@ class DBI_in_Base(object):
         the data
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
 
         rows = db.select(table=tname, fields=self.nk_fnames, where='')
@@ -799,7 +799,7 @@ class DBI_in_Base(object):
         should get an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), data must be a tuple",
@@ -816,7 +816,7 @@ class DBI_in_Base(object):
         should get an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), fields must be a list",
@@ -831,7 +831,7 @@ class DBI_in_Base(object):
         get an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), orderby clause must be a string",
@@ -847,7 +847,7 @@ class DBI_in_Base(object):
         get an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), table name must be a string",
@@ -862,7 +862,7 @@ class DBI_in_Base(object):
         get an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), where clause must be a string",
@@ -878,7 +878,7 @@ class DBI_in_Base(object):
         the order requested
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         exp = [self.testdata[2], self.testdata[4], self.testdata[0],
                self.testdata[3], self.testdata[1]]
@@ -894,7 +894,7 @@ class DBI_in_Base(object):
         requested
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.setup_select(tname)
         exp = [self.testdata[0], self.testdata[2], self.testdata[3]]
 
@@ -909,7 +909,7 @@ class DBI_in_Base(object):
         return True
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         self.reset_db(tname)
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -922,7 +922,7 @@ class DBI_in_Base(object):
         should return False
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         self.reset_db(tname)
         db = self.DBI()
         self.expected(False, db.table_exists(table=tname))
@@ -972,7 +972,7 @@ class DBI_out_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -994,7 +994,7 @@ class DBI_out_Base(object):
         an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -1015,7 +1015,7 @@ class DBI_out_Base(object):
         column at the end
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -1041,7 +1041,7 @@ class DBI_out_Base(object):
         get an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
         db.close()
@@ -1059,7 +1059,7 @@ class DBI_out_Base(object):
           drop arg
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1079,7 +1079,7 @@ class DBI_out_Base(object):
         drop arg
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1098,7 +1098,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling alter() with an empty add should get an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1115,7 +1115,7 @@ class DBI_out_Base(object):
           sqlite: exception on drop argument mysql: exception on empty drop arg
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1134,7 +1134,7 @@ class DBI_out_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1150,7 +1150,7 @@ class DBI_out_Base(object):
         DBI_out_Base: Calling alter() with no action should get an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1166,7 +1166,7 @@ class DBI_out_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.alter_table_string,
@@ -1182,7 +1182,7 @@ class DBI_out_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name()
+        tname = hx.util.my_name()
         db = self.DBI()
         db.close()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1198,7 +1198,7 @@ class DBI_out_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name()
+        tname = hx.util.my_name()
         db = self.DBI()
         db.close()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1214,7 +1214,7 @@ class DBI_out_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name()
+        tname = hx.util.my_name()
         db = self.DBI()
         db.close()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1229,7 +1229,7 @@ class DBI_out_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name()
+        tname = hx.util.my_name()
         db = self.DBI()
         db.close()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1246,7 +1246,7 @@ class DBI_out_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name()
+        tname = hx.util.my_name()
         db = self.DBI()
         db.close()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -1264,7 +1264,7 @@ class DBI_out_Base(object):
         """
         self.dbgfunc()
         db = self.DBI()
-        tname = util.my_name()
+        tname = hx.util.my_name()
         flist = ['rowid integer primary key autoincrement',
                  'one text',
                  'two int']
@@ -1347,7 +1347,7 @@ class DBI_out_Base(object):
         table
         """
         self.dbgfunc()
-        util.conditional_rm(self.dbname())
+        hx.util.conditional_rm(self.dbname())
         db = self.DBI()
         if db.table_exists(table='create_yes'):
             db.drop(table='create_yes')
@@ -1782,7 +1782,7 @@ class DBI_out_Base(object):
         """
         self.dbgfunc()
         mcfg = make_tcfg(self.dbtype, self)
-        util.conditional_rm(self.dbname())
+        hx.util.conditional_rm(self.dbname())
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              ["no such table: test_tnox",
@@ -1802,7 +1802,7 @@ class DBI_out_Base(object):
         the table
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         self.reset_db(tname)
         fdef = ['id integer primary key autoincrement',
                 'name text',
@@ -1876,7 +1876,7 @@ class DBI_out_Base(object):
                             ('tcc', 1423423425, 0),
                             ('report', 1401910729, 0),
                             ])
-            w = util.pop0(wlist)
+            w = hx.util.pop0(wlist)
             self.assertEqual(None, w, "Unexpected warning: %s" % w)
         rows = db.select(table='history',
                          fields=['plugin', 'runtime', 'errors'])
@@ -1897,7 +1897,7 @@ class DBI_out_Base(object):
         rn = [hx.util.rstring(8, 12) for x in range(count)]
         for rname in rn:
             db.create(table=rname, fields=self.fdef)
-        
+
         post = db.table_list()
 
         tnl = ['test_' + x for x in rn]
@@ -1914,7 +1914,7 @@ class DBI_out_Base(object):
         fields requested
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         udata = [('frodo', 23, 199.7),
                  ('zippo', 14, 201.3),
                  ('zumpy', 47, 202.1)]
@@ -1933,7 +1933,7 @@ class DBI_out_Base(object):
             exp = (udata[idx][0], udata[idx][1], self.testdata[idx][2])
             self.assertTrue(exp in r,
                             "Expected %s in %s but didn't find it" %
-                            (str(exp), util.line_quote(r)))
+                            (str(exp), hx.util.line_quote(r)))
         db.close()
 
     # -------------------------------------------------------------------------
@@ -1943,7 +1943,7 @@ class DBI_out_Base(object):
         fields requested. However, placeholders should not be quoted.
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         udata = [('frodo', 23, 199.7),
                  ('zippo', 14, 201.3),
                  ('zumpy', 47, 202.1)]
@@ -1968,7 +1968,7 @@ class DBI_out_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On update(), data must not be empty",
@@ -1985,7 +1985,7 @@ class DBI_out_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On update(), fields must not be empty",
@@ -2002,7 +2002,7 @@ class DBI_out_Base(object):
         exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On update(), table name must not be empty",
@@ -2019,7 +2019,7 @@ class DBI_out_Base(object):
         all the rows
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         udata = [('frodo', 23, 199.7),
                  ('zippo', 14, 201.3),
                  ('zumpy', 47, 202.1)]
@@ -2038,7 +2038,7 @@ class DBI_out_Base(object):
             exp = (udata[idx][0], 43, self.testdata[idx][2])
             self.assertTrue(exp in r,
                             "Expected %s in %s but didn't find it" %
-                            (str(exp), util.line_quote(r)))
+                            (str(exp), hx.util.line_quote(r)))
         db.close()
 
     # -------------------------------------------------------------------------
@@ -2048,7 +2048,7 @@ class DBI_out_Base(object):
         should get an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On update(), fields must be a list",
@@ -2065,7 +2065,7 @@ class DBI_out_Base(object):
         an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On update(), data must be a list of tuples",
@@ -2098,7 +2098,7 @@ class DBI_out_Base(object):
         get an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On update(), table name must be a string",
@@ -2115,7 +2115,7 @@ class DBI_out_Base(object):
         get an exception
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On update(), where clause must be a string",
@@ -2133,7 +2133,7 @@ class DBI_out_Base(object):
         rows requested
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         udata = [('frodo', 23, 199.7),
                  ('zippo', 14, 201.3),
                  ('zumpy', 47, 202.1)]
@@ -2152,7 +2152,7 @@ class DBI_out_Base(object):
         for exp in explist:
             self.assertTrue(exp in r,
                             "Expected %s in %s but didn't find it" %
-                            (str(exp), util.line_quote(r)))
+                            (str(exp), hx.util.line_quote(r)))
         db.close()
 
     # -------------------------------------------------------------------------
@@ -2224,7 +2224,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         add the new column, honoring the *pos* argument.
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -2247,7 +2247,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         add the new column, honoring the *pos* argument
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -2270,7 +2270,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         argument should add the new column at the end of the row
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -2293,7 +2293,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         drop the column
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -2356,7 +2356,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
            an exception
         """
         self.dbgfunc()
-        tname = util.my_name()
+        tname = hx.util.my_name()
         tcfg = make_tcfg(self.dbtype, self)
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -2428,7 +2428,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         add column at end. Argument *pos* is ignored.
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -2450,7 +2450,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         add column at end. Argument *pos* is ignored.
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -2472,7 +2472,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         argument should ignore pos arg and add column at end.
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         # create test table
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
@@ -2495,7 +2495,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         operation.
         """
         self.dbgfunc()
-        tname = util.my_name().replace('test_', '')
+        tname = hx.util.my_name().replace('test_', '')
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -2526,8 +2526,8 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         self.dbgfunc()
         # first, we create a database file from scratch
-        util.conditional_rm(self.dbname())
-        tabname = util.my_name()
+        hx.util.conditional_rm(self.dbname())
+        tabname = hx.util.my_name()
         dba = self.DBI()
         dba.create(table=tabname, fields=['field1 text'])
         dba.close()
@@ -2552,7 +2552,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         exception.
         """
         self.dbgfunc()
-        util.conditional_rm(self.dbname())
+        hx.util.conditional_rm(self.dbname())
         os.mkdir(self.dbname(), 0777)
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "unable to open database file",
@@ -2567,8 +2567,8 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         database.
         """
         self.dbgfunc()
-        util.conditional_rm(self.dbname())
-        util.touch(self.dbname())
+        hx.util.conditional_rm(self.dbname())
+        hx.util.touch(self.dbname())
         db = self.DBI()
         db.create(table='testtab',
                   fields=['rowid integer primary key autoincrement'])
@@ -2585,7 +2585,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         exception
         """
         self.dbgfunc()
-        util.conditional_rm(self.dbname())
+        hx.util.conditional_rm(self.dbname())
         os.mkfifo(self.dbname())
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "disk I/O error",
@@ -2623,7 +2623,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         connection to it should create it.
         """
         self.dbgfunc()
-        util.conditional_rm(self.dbname())
+        hx.util.conditional_rm(self.dbname())
         db = self.DBI()
         db.close()
         self.assertPathPresent(self.dbname())
@@ -2634,7 +2634,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         DBIsqliteTest: File dbname is a socket -- we throw an exception
         """
         self.dbgfunc()
-        util.conditional_rm(self.dbname())
+        hx.util.conditional_rm(self.dbname())
         sockname = self.tmpdir(util.my_name())
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.bind(sockname)
@@ -2654,7 +2654,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         self.dbgfunc()
         # the symlink points at a directory
-        util.conditional_rm(self.dbname() + '_xyz')
+        hx.util.conditional_rm(self.dbname() + '_xyz')
         os.mkdir(self.dbname() + '_xyz', 0777)
         os.symlink(os.path.basename(self.dbname() + '_xyz'), self.dbname())
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -2671,9 +2671,9 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         self.dbgfunc()
         # the symlink points at a directory
-        util.conditional_rm(self.dbname())
-        util.conditional_rm(self.dbname() + '_xyz')
-        util.touch(self.dbname() + '_xyz')
+        hx.util.conditional_rm(self.dbname())
+        hx.util.conditional_rm(self.dbname() + '_xyz')
+        hx.util.touch(self.dbname() + '_xyz')
         os.symlink(os.path.basename(self.dbname() + '_xyz'), self.dbname())
         db = self.DBI()
         db.create(table='testtab',
@@ -2693,8 +2693,8 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         self.dbgfunc()
         # the symlink points at a non-existent file
-        util.conditional_rm(self.dbname())
-        util.conditional_rm(self.dbname() + '_xyz')
+        hx.util.conditional_rm(self.dbname())
+        hx.util.conditional_rm(self.dbname() + '_xyz')
         os.symlink(os.path.basename(self.dbname() + '_xyz'), self.dbname())
         db = self.DBI()
         db.create(table='testtab',
@@ -2713,7 +2713,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         exception
         """
         self.dbgfunc()
-        util.conditional_rm(self.dbname())
+        hx.util.conditional_rm(self.dbname())
         f = open(self.dbname(), 'w')
         f.write('This is a text file, not a database file\n')
         f.close()
@@ -2797,7 +2797,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         DBIsqliteTest: reset the database
         """
-        util.conditional_rm(self.dbname())
+        hx.util.conditional_rm(self.dbname())
 
 
 # -----------------------------------------------------------------------------
