@@ -881,7 +881,7 @@ def ymdhms(epoch, fmt="%Y.%m%d %H:%M:%S"):
 
 
 # -----------------------------------------------------------------------------
-class HpssicError(Exception):
+class HXerror(Exception):
     def __init__(self, value):
         """
         Set up the value, normally a text string
