@@ -1,6 +1,11 @@
+alter_table_string = ("On alter(), table name must be a string")
+
 cov_no_data = ("Coverage.py warning: No data was collected.\r\n")
 
 db_closed = ("Cannot operate on a closed database")
+
+db_closed_already_rgx = ("(closing a closed connection|" +
+                         "Connection is not active)")
 
 dbname_cfg_required = ("A dbname or cfg object and section name is required" +
                        "(dbname=")

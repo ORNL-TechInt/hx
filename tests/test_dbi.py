@@ -1835,9 +1835,16 @@ class DBI_out_Base(object):
         """
         self.dbgfunc()
         db = self.DBI()
-        dbschem.make_table('history')
-        db.insert(table='history',
-                  fields=['plugin', 'runtime', 'errors'],
+        tname = 'compkey_dup'
+        fdef = ['prefix       varchar(32)',
+                'suffix       int',
+                'other        int',
+                'primary key (prefix, suffix)']
+        flist = ['prefix', 'suffix', 'other']
+
+        db.create(table=tname, fields=fdef)
+        db.insert(table=tname,
+                  fields=flist,
                   data=[('tcc', 1398456437, 0),
                         ('migr', 1401910729, 0),
                         ('report', 1401910729, 0),
@@ -1846,22 +1853,20 @@ class DBI_out_Base(object):
 
         # should fail
         self.assertRaisesMsg(hx.dbi.DBIerror,
-                             ["columns plugin, runtime are not unique",
-                              "1062: Duplicate entry"],
+                             [msg.compkey_dup_mysql_msg,
+                              msg.compkey_dup_sqlite_msg],
                              db.insert,
-                             table='history',
-                             fields=['plugin', 'runtime', 'errors'],
+                             table=tname,
+                             fields=flist,
                              data=[('tcc', 1398456437, 0)])
-        rows = db.select(table='history',
-                         fields=['plugin', 'runtime', 'errors'])
+        rows = db.select(table=tname, fields=flist)
         self.expected(5, len(rows))
 
         # should succeed
-        db.insert(table='history',
-                  fields=['plugin', 'runtime', 'errors'],
+        db.insert(table=tname,
+                  fields=flist,
                   data=[('cv', 1398456437, 0)])
-        rows = db.select(table='history',
-                         fields=['plugin', 'runtime', 'errors'])
+        rows = db.select(table=tname, fields=flist)
         self.expected(6, len(rows))
 
         # what if we insert three rows and one is a duplicate. Do the other two
@@ -1869,17 +1874,16 @@ class DBI_out_Base(object):
         # duplicates are dropped and everything else is inserted. However, in
         # this situation, mysql throws a warning.
         with warnings.catch_warnings(record=True) as wlist:
-            db.insert(table='history',
+            db.insert(table=tname,
                       ignore=True,
-                      fields=['plugin', 'runtime', 'errors'],
+                      fields=flist,
                       data=[('cv', 1598456437, 0),
                             ('tcc', 1423423425, 0),
                             ('report', 1401910729, 0),
                             ])
             w = hx.util.pop0(wlist)
             self.assertEqual(None, w, "Unexpected warning: %s" % w)
-        rows = db.select(table='history',
-                         fields=['plugin', 'runtime', 'errors'])
+        rows = db.select(table=tname, fields=flist)
         self.expected(8, len(rows))
 
     # -------------------------------------------------------------------------
