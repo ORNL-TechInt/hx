@@ -490,8 +490,8 @@ class DBI_in_Base(object):
         a = self.DBI()
         dirl = [q for q in dir(a) if not q.startswith('_')]
         xattr_req = ['alter', 'close', 'create', 'dbname', 'delete',
-                     'describe', 'drop', 'closed',
-                     'insert', 'select', 'table_exists', 'update', 'cursor']
+                     'describe', 'drop', 'closed', 'insert', 'select',
+                     'table_exists', 'table_list', 'update', 'cursor']
         xattr_allowed = ['alter']
 
         for attr in dirl:
