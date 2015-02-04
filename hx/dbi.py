@@ -260,7 +260,7 @@ class DBI(object):
           db.alter(table=<tabname>, dropcol=<col name>)
         """
         if self.closed:
-            raise DBIerror(MSG.db_closed, dbname=self._dbobj.dbname)
+            raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         return self._dbobj.alter(**kwargs)
 
     # -------------------------------------------------------------------------
@@ -270,7 +270,7 @@ class DBI(object):
         exists (even if the table itself is empty). Otherwise, return False.
         """
         if self.closed:
-            raise DBIerror(MSG.db_closed, dbname=self._dbobj.dbname)
+            raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         return self._dbobj.table_exists(**kwargs)
 
     # -------------------------------------------------------------------------
@@ -279,7 +279,7 @@ class DBI(object):
         DBI: Return a list of tables in the database.
         """
         if self.closed:
-            raise DBIerror(MSG.db_closed, dbname=self._dbobj.dbname)
+            raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         return self._dbobj.table_list(**kwargs)
 
     # -------------------------------------------------------------------------
@@ -289,7 +289,7 @@ class DBI(object):
         operations are not allowed on the database.
         """
         if self.closed:
-            raise DBIerror(MSG.db_closed, dbname=self._dbobj.dbname)
+            raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         rv = self._dbobj.close()
         self.closed = True
         return rv
@@ -303,7 +303,7 @@ class DBI(object):
             ['id int primary key', 'name text', 'category xtext', ... ]
         """
         if self.closed:
-            raise DBIerror(MSG.db_closed, dbname=self._dbobj.dbname)
+            raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         return self._dbobj.create(**kwargs)
 
     # -------------------------------------------------------------------------
@@ -312,7 +312,7 @@ class DBI(object):
         DBI: Return a database cursor
         """
         if self.closed:
-            raise DBIerror(MSG.db_closed, dbname=self._dbobj.dbname)
+            raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         return self._dbobj.cursor(**kwargs)
 
     # -------------------------------------------------------------------------
@@ -322,7 +322,7 @@ class DBI(object):
         is a where clause (string). data is a tuple of fields.
         """
         if self.closed:
-            raise DBIerror(MSG.db_closed, dbname=self._dbobj.dbname)
+            raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         return self._dbobj.delete(**kwargs)
 
     # -------------------------------------------------------------------------
@@ -331,7 +331,7 @@ class DBI(object):
         DBI: Return a table description.
         """
         if self.closed:
-            raise DBIerror(MSG.db_closed, dbname=self._dbobj.dbname)
+            raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         return self._dbobj.describe(**kwargs)
 
     # -------------------------------------------------------------------------
@@ -340,7 +340,7 @@ class DBI(object):
         DBI: Drop the named table.
         """
         if self.closed:
-            raise DBIerror(MSG.db_closed, dbname=self._dbobj.dbname)
+            raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         return self._dbobj.drop(**kwargs)
 
     # -------------------------------------------------------------------------
@@ -350,7 +350,7 @@ class DBI(object):
         is a list of tuples.
         """
         if self.closed:
-            raise DBIerror(MSG.db_closed, dbname=self._dbobj.dbname)
+            raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         return self._dbobj.insert(**kwargs)
 
     # -------------------------------------------------------------------------
@@ -370,7 +370,7 @@ class DBI(object):
         rows are returned in that order.
         """
         if self.closed:
-            raise DBIerror(MSG.db_closed, dbname=self._dbobj.dbname)
+            raise DBIerror(msg.db_closed, dbname=self._dbobj.dbname)
         return self._dbobj.select(**kwargs)
 
     # -------------------------------------------------------------------------
