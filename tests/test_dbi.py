@@ -118,7 +118,7 @@ def make_tcfg(**kw):
 
 
 # -----------------------------------------------------------------------------
-def DBI(dbtype, dbname):
+def DBI(dbtype, dbname=None):
     """
     Generate a dbi object with no test object to start from
     """
@@ -128,7 +128,8 @@ def DBI(dbtype, dbname):
     (cfobj, section) = make_tcfg(**mkw)
 
     kw = {'cfg': cfobj,
-          'section': section}
+          'section': section,
+          'dbname': mkw['dbname']}
 
     rval = hx.dbi.DBI(**kw)
     return rval
@@ -154,7 +155,21 @@ class DBITestRoot(hx.testhelp.HelpedTestCase):
         DBITestRoot: Return a hx.dbi.DBI() object based on the current test
         object
         """
-        dbn = dbname or self.tmpdir('test.db')
+        if dbname is not None:
+            dbn = dbname
+        else:
+            cf = hx.cfg.config()
+            cf.read('%s.cfg' % self.dbtype)
+            sect = cf.db_section()
+            if self.dbtype == 'db2':
+                dbn = cf.get(sect, 'cfg')
+            elif self.dbtype == 'sqlite':
+                dbn = self.tmpdir('test.db')
+            elif self.dbtype == 'mysql':
+                dbn = cf.get(sect, 'dbname')
+            else:
+                raise hx.util.HXerror(msg.unknown_dbtype_S % self.dbtype)
+
         return DBI(self.dbtype, dbname=dbn)
 
 
