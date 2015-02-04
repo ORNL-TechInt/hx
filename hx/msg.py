@@ -1,6 +1,14 @@
 alter_table_string = ("On alter(), table name must be a string")
 
+cfg_missing_parm_S = ("%s required on call to DBI()")
+
+compkey_dup_mysql_msg = ("1062: Duplicate entry")
+
+compkey_dup_sqlite_msg = ("columns prefix, suffix are not unique")
+
 cov_no_data = ("Coverage.py warning: No data was collected.\r\n")
+
+create_table_string = ("On create(), table name must be a string")
 
 db_closed = ("Cannot operate on a closed database")
 
@@ -16,6 +24,8 @@ default_int_float = ("config.get_time: default must be int or float")
 
 default_piddir = ("/tmp/crawler")
 
+invalid_attr_rgx = ("Attribute '.*' is not valid for .*")
+
 invalid_attr_SS = ("Attribute '%s' is not valid for %s")
 
 invalid_time_unit_S = ("invalid time unit '%s'")
@@ -27,6 +37,10 @@ missing_arg_S = ("A %s or cfg object and section name is required")
 missing_db_section = ("No database section present")
 
 section_required = ("A section name is required")
+
+table_already_mysql = ("1050: Table 'test_create_already' already exists")
+
+table_already_sqlite = ("table test_create_already already exists")
 
 tbl_prefix_required = ("Table prefix string (tbl_prefix) is required")
 
