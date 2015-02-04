@@ -893,3 +893,5 @@ class HXerror(Exception):
         Return the value as a string
         """
         return repr(self.value)
+
+HpssicError = HXerror

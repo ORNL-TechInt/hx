@@ -55,7 +55,7 @@ def make_db2_tcfg(**kw):
     """
     tcfg = hx.cfg.config()
     xcfg = hx.cfg.add_config('db2.cfg', close=True)
-    section = xcfg.sections()[0]
+    section = xcfg.db_section()
     tcfg.add_section(section)
     for optname in ['cfg', 'sub', 'dbtype', 'tbl_prefix',
                     'hostname', 'port', 'username', 'password']:
@@ -72,7 +72,7 @@ def make_mysql_tcfg(**kw):
     """
     tcfg = hx.cfg.config()
     xcfg = hx.cfg.add_config(filename='mysql.cfg', close=True)
-    section = xcfg.sections()[0]
+    section = xcfg.db_section()
     tcfg.add_section(section)
     tcfg.set(section, 'dbtype', kw['dbtype'])
     tcfg.set(section, 'dbname', xcfg.get(section, 'dbname'))
@@ -1890,7 +1890,7 @@ class DBI_out_Base(object):
         """
         self.dbgfunc()
         cf = hx.cfg.add_config(filename="mysql.cfg", close=True)
-        sect = [x for x in cf.sections() if x != cf.meta_section()][0]
+        sect = cf.db_section()
         db = hx.dbi.DBI(cfg=cf, section=sect, tbl_prefix='test')
         pre = db.table_list()
         count = random.randint(4, 9)
@@ -2207,9 +2207,8 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         Drop tables like 'test_%'
         """
-        # pdb.set_trace()
         cf = hx.cfg.add_config(filename="mysql.cfg", close=True)
-        sect = [x for x in cf.sections() if x != cf.meta_section()][0]
+        sect = cf.db_section()
         db = hx.dbi.DBI(cfg=cf, section=sect, tbl_prefix="test")
         tl = db.table_list()
         for tname in tl:

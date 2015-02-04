@@ -591,6 +591,24 @@ class config(ConfigParser.ConfigParser):
         return 'cfgmeta'
 
     # -------------------------------------------------------------------------
+    def db_section(self):
+        """
+        Return a section describing a database if present or throw an exception
+        otherwise
+        """
+        sl = self.sections()
+        sl.remove(self.meta_section())
+        rval = None
+        for s in sl:
+            if self.has_option(s, 'dbtype'):
+                rval = s
+                break
+        if rval is None:
+            raise HXerror(msg.missing_db_section)
+        else:
+            return rval
+
+    # -------------------------------------------------------------------------
     def qt_parse(self, spec):
         """
         Build and return a dict representing a quiet time period. It may be

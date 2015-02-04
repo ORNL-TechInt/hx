@@ -19,6 +19,8 @@ invalid_time_mag_S = ("invalid time magnitude '%s'")
 
 missing_arg_S = ("A %s or cfg object and section name is required")
 
+missing_db_section = ("No database section present")
+
 section_required = ("A section name is required")
 
 tbl_prefix_required = ("Table prefix string (tbl_prefix) is required")
