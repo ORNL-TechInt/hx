@@ -128,8 +128,7 @@ def DBI(dbtype, dbname):
     (cfobj, section) = make_tcfg(**mkw)
 
     kw = {'cfg': cfobj,
-          'section': section,
-          'timeout': 10.0}
+          'section': section}
 
     rval = hx.dbi.DBI(**kw)
     return rval
@@ -150,12 +149,13 @@ class DBITestRoot(hx.testhelp.HelpedTestCase):
         return db
 
     # -------------------------------------------------------------------------
-    def DBI(self, dbname='cfg'):
+    def DBI(self, dbname=None):
         """
         DBITestRoot: Return a hx.dbi.DBI() object based on the current test
         object
         """
-        return DBI(self.dbtype, dbname=dbname)
+        dbn = dbname or self.tmpdir('test.db')
+        return DBI(self.dbtype, dbname=dbn)
 
 
 # -----------------------------------------------------------------------------
