@@ -138,6 +138,32 @@ def DBI(dbtype, dbname=None):
 # -----------------------------------------------------------------------------
 class DBITestRoot(hx.testhelp.HelpedTestCase):
     # -------------------------------------------------------------------------
+    def dbname(self, dbtype=None):
+        """
+        Set an sqlite database name for this test object
+        """
+        if dbtype is not None:
+            dbt = dbtype
+        elif hasattr(self, 'dbtype'):
+            dbt = self.dbtype
+        else:
+            raise util.HXerror('Cannot compute dbname -- no dbtype available')
+
+        cf = hx.cfg.config()
+        cf.read('%s.cfg' % dbt)
+        sect = cf.db_section()
+        if dbt == 'sqlite':
+            rval = self.tmpdir("test.db")
+        elif dbt == 'mysql':
+            rval = cf.get(sect, 'dbname')
+        elif dbt == 'db2':
+            rval = cf.get(sect, 'cfg')
+        else:
+            raise hx.util.HXerror(msg.unknown_dbtype_S % dbt)
+
+        return rval
+
+    # -------------------------------------------------------------------------
     def setup_select(self, table_name):
         """
         DBITestRoot:
@@ -155,21 +181,7 @@ class DBITestRoot(hx.testhelp.HelpedTestCase):
         DBITestRoot: Return a hx.dbi.DBI() object based on the current test
         object
         """
-        if dbname is not None:
-            dbn = dbname
-        else:
-            cf = hx.cfg.config()
-            cf.read('%s.cfg' % self.dbtype)
-            sect = cf.db_section()
-            if self.dbtype == 'db2':
-                dbn = cf.get(sect, 'cfg')
-            elif self.dbtype == 'sqlite':
-                dbn = self.tmpdir('test.db')
-            elif self.dbtype == 'mysql':
-                dbn = cf.get(sect, 'dbname')
-            else:
-                raise hx.util.HXerror(msg.unknown_dbtype_S % self.dbtype)
-
+        dbn = dbname or self.dbname()
         return DBI(self.dbtype, dbname=dbn)
 
 
@@ -242,7 +254,7 @@ class DBITest(DBITestRoot):
                              "is required",
                              hx.dbi.DBI,
                              dbtype='sqlite',
-                             dbname=self.dbname())
+                             dbname=self.dbname('sqlite'))
 
     # -------------------------------------------------------------------------
     def test_ctor_no_hostname(self):
@@ -257,7 +269,7 @@ class DBITest(DBITestRoot):
                              "is required",
                              hx.dbi.DBI,
                              dbtype='mysql',
-                             dbname=self.dbname(),
+                             dbname=self.dbname('mysql'),
                              tbl_prefix='test')
 
     # -------------------------------------------------------------------------
@@ -273,7 +285,7 @@ class DBITest(DBITestRoot):
                              "is required",
                              hx.dbi.DBI,
                              dbtype='mysql',
-                             dbname=self.dbname(),
+                             dbname=self.dbname('mysql'),
                              tbl_prefix='test',
                              hostname='something.meaningless.org')
 
@@ -290,7 +302,7 @@ class DBITest(DBITestRoot):
                              "is required",
                              hx.dbi.DBI,
                              dbtype='mysql',
-                             dbname=self.dbname(),
+                             dbname=self.dbname('mysql'),
                              tbl_prefix='test',
                              hostname='something.meaningless.org',
                              username='somebody')
@@ -321,7 +333,7 @@ class DBITest(DBITestRoot):
         self.dbgfunc()
 
         (cf, section) = make_tcfg(dbtype='sqlite',
-                                  dbname=self.dbname())
+                                  dbname=self.dbname('sqlite'))
         a = hx.dbi.DBI(cfg=cf, section=section)
         a.close()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -340,15 +352,16 @@ class DBITest(DBITestRoot):
         DBI should instantiate itself with an internal DBIsqlite object.
 
         It might seem like this test should be in the sqlite class below
-        (DBIsqliteTest). However, this test is about verifying that the DBI
-        class does the right thing based on the configuration it gets, not
-        anything particular about sqlite. What iss being tested here is not
-        instantiating an sqlite database connection per se so much as veryfing
-        that if the configuration says to get us an sqlite database connection,
-        DBI does not hand us back a mysql connection.
+        (DBIsqliteTest). However, this test is about verifying that DBI does
+        the right thing based on the configuration it gets, not anything
+        particular about sqlite. What is being tested here is not instantiating
+        an sqlite database connection per se so much as veryfing that if the
+        configuration says to get us an sqlite database connection, DBI does
+        not hand us back a mysql connection.
         """
         self.dbgfunc()
-        (cfobj, section) = make_tcfg(dbtype='sqlite', dbname=self.dbname())
+        (cfobj, section) = make_tcfg(dbtype='sqlite',
+                                     dbname=self.dbname('sqlite'))
         a = hx.dbi.DBI(cfg=cfobj, section=section)
         self.assertTrue(hasattr(a, '_dbobj'),
                         "Expected to find a _dbobj attribute on %s" % a)
@@ -509,10 +522,13 @@ class DBI_in_Base(object):
         should get an exception
         """
         self.dbgfunc()
+        (cf, sect) = make_tcfg(dbtype=self.dbtype, dbname=self.dbname())
         self.assertRaisesRegex(hx.dbi.DBIerror,
                                hx.msg.invalid_attr_rgx,
                                hx.dbi.DBI,
-                               cfg=make_tcfg(self.dbtype, self),
+                               cfg=cf,
+                               section=sect,
+                               dbname=self.dbname(),
                                badattr='frooble')
 
     # -------------------------------------------------------------------------
@@ -2334,10 +2350,12 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         should get an exception
         """
         self.dbgfunc()
+        (cf, sect) = make_tcfg(dbtype=self.dbtype, dbname=self.dbname())
         self.assertRaisesRegex(hx.dbi.DBIerror,
                                hx.msg.invalid_attr_rgx,
                                hx.dbi.DBImysql,
-                               cfg=make_tcfg(self.dbtype, self),
+                               cfg=cf,
+                               section=sect,
                                badattr='frooble')
 
     # -------------------------------------------------------------------------
@@ -2530,10 +2548,12 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         should get an exception
         """
         self.dbgfunc()
+        (cf, sect) = make_tcfg(dbtype=self.dbtype, dbname=self.dbname())
         self.assertRaisesRegex(hx.dbi.DBIerror,
                                hx.msg.invalid_attr_rgx,
                                hx.dbi.DBIsqlite,
-                               cfg=make_tcfg(self.dbtype, self),
+                               cfg=cf,
+                               section=sect,
                                badattr='frooble')
 
     # -------------------------------------------------------------------------
@@ -2845,10 +2865,13 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         should get an exception
         """
         self.dbgfunc()
+        (cf, sect) = make_tcfg(dbtype=self.dbtype, dbname=self.dbname())
         self.assertRaisesRegex(hx.dbi.DBIerror,
                                hx.msg.invalid_attr_rgx,
                                hx.dbi.DBIdb2,
-                               cfg=make_tcfg(self.dbtype, self),
+                               cfg=cf,
+                               section=sect,
+                               dbname=self.dbname(),
                                badattr='frooble')
 
     # -------------------------------------------------------------------------

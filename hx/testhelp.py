@@ -218,13 +218,6 @@ class HelpedTestCase(unittest.TestCase):
             self.fail('Expected exception %s not thrown' % exception)
 
     # -------------------------------------------------------------------------
-    def dbname(self):
-        """
-        Set an sqlite database name for this test object
-        """
-        return self.tmpdir("test.db")
-
-    # -------------------------------------------------------------------------
     def expected(self, expval, actual):
         """
         Compare the expected value (expval) and the actual value (actual). If
