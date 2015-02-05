@@ -164,6 +164,17 @@ class DBITestRoot(hx.testhelp.HelpedTestCase):
         return rval
 
     # -------------------------------------------------------------------------
+    def setUp(self):
+        """
+        Create an appropriate config object for this test based on self.dbtype.
+        We will create self.cf and self.section
+        """
+        # pdb.set_trace()
+        super(DBITestRoot, self).setUp()
+        (self.cf, self.section) = make_tcfg(dbtype=self.dbtype,
+                                            dbname=self.dbname())
+
+    # -------------------------------------------------------------------------
     def setup_select(self, table_name):
         """
         DBITestRoot:
