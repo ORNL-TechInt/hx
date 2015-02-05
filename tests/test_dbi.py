@@ -533,12 +533,11 @@ class DBI_in_Base(object):
         should get an exception
         """
         self.dbgfunc()
-        (cf, sect) = make_tcfg(dbtype=self.dbtype, dbname=self.dbname())
         self.assertRaisesRegex(hx.dbi.DBIerror,
                                hx.msg.invalid_attr_rgx,
                                hx.dbi.DBI,
-                               cfg=cf,
-                               section=sect,
+                               cfg=self.cf,
+                               section=self.section,
                                dbname=self.dbname(),
                                badattr='frooble')
 
@@ -1406,13 +1405,13 @@ class DBI_out_Base(object):
         exception
         """
         self.dbgfunc()
-        tcfg = make_tcfg(self.dbtype, self)
-        tcfg.remove_option(CrawlDBI.CRWL_SECTION, 'dbname')
-        exp = "No option 'dbname' in section: '%s'" % hx.dbi.CRWL_SECTION
+        self.cf.remove_option(self.section, 'dbname')
+        exp = hx.msg.cfg_missing_parm_S % "dbname"
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              exp,
                              hx.dbi.DBI,
-                             cfg=tcfg,
+                             cfg=self.cf,
+                             section=self.section,
                              dbtype=self.dbtype)
 
     # -------------------------------------------------------------------------
@@ -1823,13 +1822,12 @@ class DBI_out_Base(object):
         exception
         """
         self.dbgfunc()
-        mcfg = make_tcfg(self.dbtype, self)
         hx.util.conditional_rm(self.dbname())
         db = self.DBI()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              ["no such table: test_tnox",
                               "Table '%s.test_tnox' doesn't exist" %
-                              mcfg.get(CrawlDBI.CRWL_SECTION, 'dbname')],
+                              self.cf.get(self.section, 'dbname')],
                              db.insert,
                              table='tnox',
                              fields=['one', 'two'],
@@ -2361,12 +2359,11 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         should get an exception
         """
         self.dbgfunc()
-        (cf, sect) = make_tcfg(dbtype=self.dbtype, dbname=self.dbname())
         self.assertRaisesRegex(hx.dbi.DBIerror,
                                hx.msg.invalid_attr_rgx,
                                hx.dbi.DBImysql,
-                               cfg=cf,
-                               section=sect,
+                               cfg=self.cf,
+                               section=self.section,
                                badattr='frooble')
 
     # -------------------------------------------------------------------------
@@ -2394,17 +2391,18 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
                              dbname='foobar')
 
     # -------------------------------------------------------------------------
-    def test_dbschem_alter_table(self):
+    def test_alter_table_ok(self):
         """
-        DBImysqlTest: test dbschem.alter_table
+        !@! does this duplicate test_alter_table? >> No, it doesn't
+        DBImysqlTest: test alter_table
          > adding a column should be successful,
          > dropping a column should be successful,
          > passing both addcol and dropcol in the same invocation should raise
            an exception
         """
         self.dbgfunc()
+        self.fail('Needs attention')
         tname = hx.util.my_name()
-        tcfg = make_tcfg(self.dbtype, self)
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
         rv = dbschem.alter_table(table=tname,
@@ -2559,12 +2557,11 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         should get an exception
         """
         self.dbgfunc()
-        (cf, sect) = make_tcfg(dbtype=self.dbtype, dbname=self.dbname())
         self.assertRaisesRegex(hx.dbi.DBIerror,
                                hx.msg.invalid_attr_rgx,
                                hx.dbi.DBIsqlite,
-                               cfg=cf,
-                               section=sect,
+                               cfg=self.cf,
+                               section=self.section,
                                badattr='frooble')
 
     # -------------------------------------------------------------------------
@@ -2606,8 +2603,9 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "unable to open database file",
                              hx.dbi.DBI,
-                             cfg=make_tcfg(self.dbtype, self),
-                             dbtype=self.dbctype)
+                             cfg=self.cf,
+                             section=self.section,
+                             dbtype=self.dbtype)
 
     # -------------------------------------------------------------------------
     def test_ctor_dbn_empty(self):
@@ -2639,8 +2637,9 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "disk I/O error",
                              hx.dbi.DBI,
-                             cfg=make_tcfg(self.dbtype, self),
-                             dbtype=self.dbctype)
+                             cfg=self.cf,
+                             section=self.section,
+                             dbtype=self.dbtype)
 
     # -------------------------------------------------------------------------
     def test_ctor_dbname_none(self):
@@ -2684,16 +2683,18 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         self.dbgfunc()
         hx.util.conditional_rm(self.dbname())
-        sockname = self.tmpdir(util.my_name())
+        sockname = self.tmpdir(hx.util.my_name())
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.bind(sockname)
-        tcfg = make_tcfg(self.dbtype, self)
-        tcfg.set(CrawlDBI.CRWL_SECTION, 'dbname', sockname)
+
+        self.cf.set(self.section, 'dbname', sockname)
+
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "unable to open database file",
                              hx.dbi.DBI,
-                             cfg=tcfg,
-                             dbtype=self.dbctype)
+                             cfg=self.cf,
+                             section=self.section,
+                             dbtype=self.dbtype)
 
     # -------------------------------------------------------------------------
     def test_ctor_dbn_sym_dir(self):
@@ -2709,8 +2710,9 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "unable to open database file",
                              hx.dbi.DBI,
-                             cfg=make_tcfg(self.dbtype, self),
-                             dbtype=self.dbctype)
+                             cfg=self.cf,
+                             section=self.section,
+                             dbtype=self.dbtype)
 
     # -------------------------------------------------------------------------
     def test_ctor_dbn_sym_empty(self):
@@ -2770,7 +2772,8 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "file is encrypted or is not a database",
                              hx.dbi.DBI,
-                             cfg=make_tcfg(self.dbtype, self),
+                             cfg=self.cf,
+                             section=self.section,
                              dbtype=self.dbtype)
 
         os.unlink(self.dbname())
@@ -2876,12 +2879,11 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         should get an exception
         """
         self.dbgfunc()
-        (cf, sect) = make_tcfg(dbtype=self.dbtype, dbname=self.dbname())
         self.assertRaisesRegex(hx.dbi.DBIerror,
                                hx.msg.invalid_attr_rgx,
                                hx.dbi.DBIdb2,
-                               cfg=cf,
-                               section=sect,
+                               cfg=self.cf,
+                               section=self.section,
                                dbname=self.dbname(),
                                badattr='frooble')
 
@@ -2920,14 +2922,13 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         DBIdb2Test: Called with no dbname, constructor should throw exception
         """
         self.dbgfunc()
-        (cfobj, section) = make_tcfg(self.dbtype, self)
-        cfobj.remove_option(section, 'username')
-        cfobj.remove_option(section, 'password')
+        self.cf.remove_option(self.section, 'password')
         self.assertRaisesRegex(hx.dbi.DBIerror,
-                               hx.msg.password_missing_rgx,
+                               hx.msg.cfg_missing_parm_S % "password",
                                hx.dbi.DBI,
-                               cfg,
-                               dbtype=self.dbctype,
+                               cfg=self.cf,
+                               section=self.section,
+                               dbtype=self.dbtype,
                                dbname='nomatter')
 
     # -------------------------------------------------------------------------
@@ -2947,12 +2948,10 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         exception
         """
         self.dbgfunc()
-        (cf, sect) = make_tcfg(self.dbtype, self)
-        cf.remove_option(sect, 'tbl_prefix')
         self.assertRaisesMsg(hx.dbi.DBIerror,
-                             msg.missing_arg_S % 'tbl_prefix',
+                             hx.msg.missing_arg_S % 'tbl_prefix',
                              hx.dbi.DBIdb2,
-                             dbname='cfg')
+                             dbname=self.dbname())
 
     # -------------------------------------------------------------------------
     def test_ctor_dbtype_db2_no_dbname(self):
