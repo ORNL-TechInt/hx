@@ -118,24 +118,6 @@ def make_tcfg(**kw):
 
 
 # -----------------------------------------------------------------------------
-def DBI(dbtype, dbname=None):
-    """
-    Generate a dbi object with no test object to start from
-    """
-    mkw = {}
-    mkw['dbtype'] = dbtype
-    mkw['dbname'] = dbname or ''
-    (cfobj, section) = make_tcfg(**mkw)
-
-    kw = {'cfg': cfobj,
-          'section': section,
-          'dbname': mkw['dbname']}
-
-    rval = hx.dbi.DBI(**kw)
-    return rval
-
-
-# -----------------------------------------------------------------------------
 class DBITestRoot(hx.testhelp.HelpedTestCase):
     # -------------------------------------------------------------------------
     def dbname(self, dbtype=None):
@@ -193,7 +175,9 @@ class DBITestRoot(hx.testhelp.HelpedTestCase):
         object
         """
         dbn = dbname or self.dbname()
-        return DBI(self.dbtype, dbname=dbn)
+        return hx.dbi.DBI(cfg=self.cf,
+                          section=self.section,
+                          dbname=dbn)
 
 
 # -----------------------------------------------------------------------------
@@ -378,6 +362,19 @@ class DBI_in_Base(object):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.valid_dbtype,
                              hx.dbi.DBI)
+
+    # -------------------------------------------------------------------------
+    def test_ctor_tblpfx_none(self):
+        """
+        DBI_in_Base: Called with no tbl_prefix, constructor should throw
+        exception
+        """
+        self.dbgfunc()
+        self.assertRaisesMsg(hx.dbi.DBIerror,
+                             hx.msg.missing_arg_S % 'tbl_prefix',
+                             hx.dbi.DBI,
+                             dbtype=self.dbtype,
+                             dbname=self.dbname())
 
     # -------------------------------------------------------------------------
     def test_describe_fail(self):
@@ -2066,7 +2063,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     @classmethod
     def drop_test_tables(cls):
         """
-        Drop tables like 'test_%'
+        DBImysqlTest: Drop tables like 'test_%'
         """
         cf = hx.cfg.add_config(filename="mysql.cfg", close=True)
         sect = cf.db_section()
@@ -2178,7 +2175,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         self.dbgfunc()
         self.assertRaisesRegex(hx.dbi.DBIerror,
                                hx.msg.invalid_attr_rgx,
-                               hx.dbi.DBImysql,
+                               hx.dbi.DBI,
                                cfg=self.cf,
                                section=self.section,
                                badattr='frooble')
@@ -2191,7 +2188,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
-                             hx.msg.dbname_required,
+                             hx.msg.missing_arg_S % 'dbname',
                              hx.dbi.DBImysql,
                              tbl_prefix='xyzzy')
 
@@ -2214,7 +2211,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_no_password(self):
         """
-        DBITest: Called with a non-sqlite dbtype, dbname, and tbl_prefix but no
+        DBImysqlTest: Called with a non-sqlite dbtype, dbname, and tbl_prefix but no
         password (or cfg containing one), the DBI ctor should throw an
         exception
         """
@@ -2232,7 +2229,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_no_username(self):
         """
-        DBITest: Called with a non-sqlite dbtype, dbname, and tbl_prefix but no
+        DBImysqlTest: Called with a non-sqlite dbtype, dbname, and tbl_prefix but no
         username (or cfg containing one), the DBI ctor should throw an
         exception
         """
@@ -2245,18 +2242,6 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
                              dbname=self.dbname('mysql'),
                              tbl_prefix='test',
                              hostname='something.meaningless.org')
-
-    # -------------------------------------------------------------------------
-    def test_ctor_tblpfx_none(self):
-        """
-        DBImysqlTest: The DBImysql ctor requires 'tbl_prefix' as
-        keyword arguments
-        """
-        self.dbgfunc()
-        self.assertRaisesMsg(hx.dbi.DBIerror,
-                             hx.msg.tblpfx_required,
-                             hx.dbi.DBImysql,
-                             dbname='foobar')
 
     # -------------------------------------------------------------------------
     def test_alter_table_ok(self):
@@ -2427,7 +2412,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         self.dbgfunc()
         self.assertRaisesRegex(hx.dbi.DBIerror,
                                hx.msg.invalid_attr_rgx,
-                               hx.dbi.DBIsqlite,
+                               hx.dbi.DBI,
                                cfg=self.cf,
                                section=self.section,
                                badattr='frooble')
@@ -2435,7 +2420,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_bad_dbtype(self):
         """
-        DBITest: If the DBI ctor is called with a dbtype other than one of the
+        DBIsqliteTest: If the DBI ctor is called with a dbtype other than one of the
         known ones, it is expected to throw an exception
         """
         self.dbgfunc()
@@ -2452,7 +2437,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_cfg_nosection(self):
         """
-        DBITest: If the DBI ctor is called with something other than a config
+        DBIsqliteTest: If the DBI ctor is called with something other than a config
         object in argv[0], it is expected to throw an exception
         """
         self.dbgfunc()
@@ -2546,51 +2531,38 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
-                             hx.msg.dbname_required,
-                             hx.dbi.DBIsqlite)
-
-    # -------------------------------------------------------------------------
-    def test_ctor_dbtype_only(self):
-        """
-        DBITest: Called with just a dbtype, the DBI ctor should throw an
-        exception
-        """
-        self.dbgfunc()
-        self.assertRaisesMsg(hx.dbi.DBIerror,
-                             "A dbname or cfg object and section name " +
-                             "is required",
+                             hx.msg.missing_arg_S % 'dbname',
                              hx.dbi.DBI,
-                             dbtype='sqlite')
+                             dbtype=self.dbtype)
 
     # -------------------------------------------------------------------------
     def test_ctor_no_tbl_prefix(self):
         """
-        DBITest: Called with a dbtype and dbname but no tbl_prefix (or cfg
+        DBIsqliteTest: Called with a dbtype and dbname but no tbl_prefix (or cfg
         containing one), the DBI ctor should throw an exception
         """
         self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
-                             "A tbl_prefix or cfg object and section name " +
-                             "is required",
+                             hx.msg.missing_arg_S % 'tbl_prefix',
                              hx.dbi.DBI,
-                             dbtype='sqlite',
-                             dbname=self.dbname('sqlite'))
+                             dbtype=self.dbtype,
+                             dbname=self.dbname())
 
     # -------------------------------------------------------------------------
     def test_ctor_nocfg_nodbtype(self):
         """
-        DBITest: no cfg and no dbtype should get a DBIerror
+        DBIsqliteTest: no cfg and no dbtype should get a DBIerror
         """
         self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "A dbtype is required",
                              hx.dbi.DBI,
-                             dbname='foobar')
+                             dbname=self.dbname())
 
     # -------------------------------------------------------------------------
     def test_ctor_sqlite(self):
         """
-        DBITest: With a config object specifying sqlite as the database type,
+        DBIsqliteTest: With a config object specifying sqlite as the database type,
         DBI should instantiate itself with an internal DBIsqlite object.
 
         Note: this test is about verifying that DBI does the right thing based
@@ -2606,18 +2578,6 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
                         "Expected to find a _dbobj attribute on %s" % a)
         self.assertTrue(isinstance(a._dbobj, hx.dbi.DBIsqlite),
                         "Expected %s to be a DBIsqlite object" % a._dbobj)
-
-    # -------------------------------------------------------------------------
-    def test_ctor_tblpfx_none(self):
-        """
-        DBIsqliteTest: Called with no tbl_prefix, constructor should throw
-        exception
-        """
-        self.dbgfunc()
-        self.assertRaisesMsg(hx.dbi.DBIerror,
-                             hx.msg.tblpfx_required,
-                             hx.dbi.DBIsqlite,
-                             dbname='foobar')
 
     # -------------------------------------------------------------------------
     def test_ctor_dbn_nosuch(self):
@@ -2741,21 +2701,10 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         """
         self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
-                             "A database name is required",
-                             hx.dbi.DBIsqlite,
+                             hx.msg.missing_arg_S % 'dbname',
+                             hx.dbi.DBI,
+                             dbtype=self.dbtype,
                              tbl_prefix='xyzzy')
-
-    # -------------------------------------------------------------------------
-    def test_ctor_sqlite_tbpreq(self):
-        """
-        DBIsqliteTest: The DBIsqlite ctor requires 'tbl_prefix' as keyword
-        arguments
-        """
-        self.dbgfunc()
-        self.assertRaisesMsg(hx.dbi.DBIerror,
-                             "A table prefix is required",
-                             hx.dbi.DBIsqlite,
-                             dbname='foobar')
 
     # -------------------------------------------------------------------------
     def test_ctor_sqlite_other(self):
@@ -2764,12 +2713,13 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         as keyword arguments
         """
         self.dbgfunc()
-        self.assertRaisesMsg(hx.dbi.DBIerror,
-                             "Attribute 'something' is not valid",
-                             hx.dbi.DBIsqlite,
-                             dbname='foobar',
-                             tbl_prefix='xyzzy',
-                             something='fribble')
+        self.assertRaisesRegex(hx.dbi.DBIerror,
+                               hx.msg.invalid_attr_rgx,
+                               hx.dbi.DBI,
+                               dbtype=self.dbtype,
+                               dbname=self.dbname(),
+                               tbl_prefix='xyzzy',
+                               something='fribble')
 
     # -------------------------------------------------------------------------
     def test_err_handler(self):
@@ -2893,20 +2843,9 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
-                             hx.msg.dbname_required,
-                             hx.dbi.DBIdb2)
-
-    # -------------------------------------------------------------------------
-    def test_ctor_tblpfx_none(self):
-        """
-        DBIdb2Test: Called with no tbl_prefix, constructor should throw
-        exception
-        """
-        self.dbgfunc()
-        self.assertRaisesMsg(hx.dbi.DBIerror,
-                             hx.msg.missing_arg_S % 'tbl_prefix',
-                             hx.dbi.DBIdb2,
-                             dbname=self.dbname())
+                             hx.msg.missing_arg_S % 'dbname',
+                             hx.dbi.DBI,
+                             dbtype=self.dbtype)
 
     # -------------------------------------------------------------------------
     def test_ctor_dbtype_db2_no_dbname(self):

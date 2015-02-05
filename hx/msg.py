@@ -15,9 +15,6 @@ db_closed = ("Cannot operate on a closed database")
 db_closed_already_rgx = ("(closing a closed connection|" +
                          "Connection is not active)")
 
-dbname_cfg_required = ("A dbname or cfg object and section name is required" +
-                       "(dbname=")
-
 dbtype_required = ("A dbtype is required")
 
 default_int_float = ("config.get_time: default must be int or float")
@@ -43,6 +40,8 @@ table_already_mysql = ("1050: Table 'test_create_already' already exists")
 table_already_sqlite = ("table test_create_already already exists")
 
 tbl_prefix_required = ("Table prefix string (tbl_prefix) is required")
+
+# tblpfx_required = ("A table prefix is required")
 
 too_many_val = ("too many values to unpack")
 
