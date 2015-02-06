@@ -1302,8 +1302,8 @@ if db2_available:
 
             cfobj = cfg.add_config()
             util.env_update(cfobj)
-
-            cxnstr = ("database=%s;" % self.dbname +
+            dbn = cfobj.get(cfobj.db_section(), self.dbname)
+            cxnstr = ("database=%s;" % dbn +
                       "hostname=%s;" % self.hostname +
                       "port=%s;" % self.port +
                       "uid=%s;" % self.username +
