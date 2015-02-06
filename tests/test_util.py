@@ -55,8 +55,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         contents() reads and returns the contents of a file as a list
         """
         self.dbgfunc()
-        filename = sys.modules['hpssic.util'].__file__.replace(".pyc", ".py")
-        x = U.contents(filename, string=False)
+        x = U.contents(U.__file__.replace(".pyc", ".py"), string=False)
         self.expected(type(x), list)
         self.expected_in('def contents\(', x)
 
@@ -67,8 +66,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         string.
         """
         self.dbgfunc()
-        filename = sys.modules['hpssic.util'].__file__.replace(".pyc", ".py")
-        x = U.contents(filename)
+        x = U.contents(U.__file__.replace(".pyc", ".py"))
         self.expected(str, type(x))
         self.expected_in('def contents\(', x)
 
