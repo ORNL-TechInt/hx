@@ -2844,18 +2844,6 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
                              dbtype=self.dbtype)
 
     # -------------------------------------------------------------------------
-    def test_ctor_dbtype_db2_no_dbname(self):
-        """
-        DBIdb2Test: With dbtype value 'db2', no dbname, constructor should
-        throw exception
-        """
-        self.dbgfunc()
-        self.assertRaisesMsg(hx.dbi.DBIerror,
-                             "With dbtype=db2, dbname must be specified",
-                             hx.dbi.DBIdb2,
-                             dbtype='db2')
-
-    # -------------------------------------------------------------------------
     def test_ctor_dbtype_db2_dbname_sub_ok(self):
         """
         DBIdb2Test: With dbtype value 'db2', good dbname, constructor should
