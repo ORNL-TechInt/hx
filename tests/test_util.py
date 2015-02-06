@@ -24,13 +24,13 @@ class UtilTest(hx.testhelp.HelpedTestCase):
     # -------------------------------------------------------------------------
     def test_Chdir(self):
         """
-        util.Chdir() is a context manager. Upon entry to the 'with' clause, the
+        U.Chdir() is a context manager. Upon entry to the 'with' clause, the
         CM sets the current directory to the argument passed to Chdir(). Upon
         exit from the 'with' clause, the CM returns to the original directory.
         """
         self.dbgfunc()
         start = os.getcwd()
-        with util.Chdir("/tmp"):
+        with U.Chdir("/tmp"):
             self.expected("/tmp", os.getcwd())
         self.expected(start, os.getcwd())
 
@@ -42,12 +42,12 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         csv_list() on 'a, b   , c' => ['a', 'b', 'c']
         """
         self.dbgfunc()
-        self.expected([], util.csv_list(""))
-        self.expected([], util.csv_list("     "))
-        self.expected(['', ''], util.csv_list("  , "))
-        self.expected(['xyz'], util.csv_list("xyz"))
-        self.expected(['abc', ''], util.csv_list("  abc, "))
-        self.expected(['a', 'b', 'c'], util.csv_list(" a,b ,  c  "))
+        self.expected([], U.csv_list(""))
+        self.expected([], U.csv_list("     "))
+        self.expected(['', ''], U.csv_list("  , "))
+        self.expected(['xyz'], U.csv_list("xyz"))
+        self.expected(['abc', ''], U.csv_list("  abc, "))
+        self.expected(['a', 'b', 'c'], U.csv_list(" a,b ,  c  "))
 
     # -------------------------------------------------------------------------
     def test_content_list(self):
@@ -56,7 +56,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         """
         self.dbgfunc()
         filename = sys.modules['hpssic.util'].__file__.replace(".pyc", ".py")
-        x = util.contents(filename, string=False)
+        x = U.contents(filename, string=False)
         self.expected(type(x), list)
         self.expected_in('def contents\(', x)
 
@@ -68,7 +68,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         """
         self.dbgfunc()
         filename = sys.modules['hpssic.util'].__file__.replace(".pyc", ".py")
-        x = util.contents(filename)
+        x = U.contents(filename)
         self.expected(str, type(x))
         self.expected_in('def contents\(', x)
 
@@ -87,12 +87,12 @@ class UtilTest(hx.testhelp.HelpedTestCase):
                  "with no timestamp so we'll be forced to read\n",
                  "backward a time or two, not just find the timestamp\n",
                  "on the first read so we exercise revread.\n"]
-        tfilename = self.tmpdir("%s.data" % util.my_name())
+        tfilename = self.tmpdir("%s.data" % U.my_name())
         f = open(tfilename, 'w')
         f.writelines(tdata)
         f.close()
 
-        self.expected("2014.0501", util.date_end(tfilename))
+        self.expected("2014.0501", U.date_end(tfilename))
 
     # -------------------------------------------------------------------------
     def test_date_start(self):
@@ -104,12 +104,12 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         tdata = ["This line should be ignored\n",
                  "2014.0412 12:25:50 This is the timestamp to return\n",
                  "2014.0430 19:30:00 This should not be returned\n"]
-        tfilename = self.tmpdir("%s.data" % (util.my_name()))
+        tfilename = self.tmpdir("%s.data" % (U.my_name()))
         f = open(tfilename, 'w')
         f.writelines(tdata)
         f.close()
 
-        self.expected("2014.0412", util.date_start(tfilename))
+        self.expected("2014.0412", U.date_start(tfilename))
 
     # -------------------------------------------------------------------------
     def test_day_offset(self):
@@ -147,14 +147,14 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         exp = re.sub("\n\s*", "", add)
 
         # make sure the target env variable is not defined
-        with util.tmpenv(evname, None):
+        with U.tmpenv(evname, None):
             # create a config object with an 'env' section and a '+' option
             cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, '+' + add)
 
-            # pass the config object to util.env_update()
-            util.env_update(cfg)
+            # pass the config object to U.env_update()
+            U.env_update(cfg)
 
             # verify that the variable was set to the expected value
             self.expected(exp, os.environ[evname])
@@ -175,15 +175,15 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         exp = ":".join([pre_val, re.sub("\n\s*", "", add)])
 
         # make sure the target env variable has the expected value
-        with util.tmpenv(evname, pre_val):
+        with U.tmpenv(evname, pre_val):
             # create a config object with an 'env' section and a folded '+'
             # option
             cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, '+' + add)
 
-            # pass the config object to util.env_update()
-            util.env_update(cfg)
+            # pass the config object to U.env_update()
+            U.env_update(cfg)
 
             # verify that the variable was set to the expected value
             self.expected(exp, os.environ[evname])
@@ -202,14 +202,14 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         exp = add
 
         # make sure the target env variable is not defined
-        with util.tmpenv(evname, None):
+        with U.tmpenv(evname, None):
             # create a config object with an 'env' section and a '+' option
             cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, '+' + add)
 
-            # pass the config object to util.env_update()
-            util.env_update(cfg)
+            # pass the config object to U.env_update()
+            U.env_update(cfg)
 
             # verify that the variable was set to the expected value
             self.expected(exp, os.environ[evname])
@@ -229,14 +229,14 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         exp = ":".join([pre_val, add])
 
         # make sure the target env variable is set to a known value
-        with util.tmpenv(evname, pre_val):
+        with U.tmpenv(evname, pre_val):
             # create a config object with an 'env' section and a '+' option
             cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, "+" + add)
 
-            # pass the config object to util.env_update()
-            util.env_update(cfg)
+            # pass the config object to U.env_update()
+            U.env_update(cfg)
 
             # verify that the target env variable now contains both old and
             # added values
@@ -257,14 +257,14 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         exp = re.sub("\n\s*", "", newval)
 
         # make sure the target env variable is not defined
-        with util.tmpenv(evname, None):
+        with U.tmpenv(evname, None):
             # create a config object with an 'env' section and a non-'+' option
             cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, newval)
 
-            # pass the config object to util.env_update()
-            util.env_update(cfg)
+            # pass the config object to U.env_update()
+            U.env_update(cfg)
 
             # verify that the variable was set to the expected value
             self.expected(exp, os.environ[evname])
@@ -285,14 +285,14 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         exp = re.sub("\n\s*", "", add)
 
         # make sure the target env variable is set to a known value
-        with util.tmpenv(evname, pre_val):
+        with U.tmpenv(evname, pre_val):
             # create a config object with an 'env' section and a non-'+' option
             cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, add)
 
-            # pass the config object to util.env_update()
-            util.env_update(cfg)
+            # pass the config object to U.env_update()
+            U.env_update(cfg)
 
             # verify that the target env variable now contains the new value
             # and the old value is gone
@@ -315,14 +315,14 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         exp = "newval"
 
         # make sure the target env variable is not defined
-        with util.tmpenv(evname, None):
+        with U.tmpenv(evname, None):
             # create a config object with an 'env' section and a non-'+' option
             cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, exp)
 
-            # pass the config object to util.env_update()
-            util.env_update(cfg)
+            # pass the config object to U.env_update()
+            U.env_update(cfg)
 
             # verify that the variable was set to the expected value
             self.expected(exp, os.environ[evname])
@@ -343,14 +343,14 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         exp = add
 
         # make sure the target env variable is set to a known value
-        with util.tmpenv(evname, pre_val):
+        with U.tmpenv(evname, pre_val):
             # create a config object with an 'env' section and a non-'+' option
             cfg = hx.cfg.config()
             cfg.add_section(sname)
             cfg.set(sname, evname, add)
 
-            # pass the config object to util.env_update()
-            util.env_update(cfg)
+            # pass the config object to U.env_update()
+            U.env_update(cfg)
 
             # verify that the target env variable now contains the new value
             # and the old value is gone
@@ -362,21 +362,21 @@ class UtilTest(hx.testhelp.HelpedTestCase):
     # -------------------------------------------------------------------------
     def test_epoch(self):
         """
-        util.epoch() converts a date string matching one of a list of formats
+        U.epoch() converts a date string matching one of a list of formats
         to an epoch time.
         """
         self.dbgfunc()
-        self.expected(1388638799, util.epoch("2014.0101 23:59:59"))
-        self.expected(1388638799, util.epoch("2014.0101.23.59.59"))
-        self.expected(1388638740, util.epoch("2014.0101 23:59"))
-        self.expected(1388638740, util.epoch("2014.0101.23.59"))
-        self.expected(1388635200, util.epoch("2014.0101 23"))
-        self.expected(1388635200, util.epoch("2014.0101.23"))
-        self.expected(1388552400, util.epoch("2014.0101"))
-        self.expected(1388552399, util.epoch("1388552399"))
-        self.assertRaisesMsg(util.HpssicError,
+        self.expected(1388638799, U.epoch("2014.0101 23:59:59"))
+        self.expected(1388638799, U.epoch("2014.0101.23.59.59"))
+        self.expected(1388638740, U.epoch("2014.0101 23:59"))
+        self.expected(1388638740, U.epoch("2014.0101.23.59"))
+        self.expected(1388635200, U.epoch("2014.0101 23"))
+        self.expected(1388635200, U.epoch("2014.0101.23"))
+        self.expected(1388552400, U.epoch("2014.0101"))
+        self.expected(1388552399, U.epoch("1388552399"))
+        self.assertRaisesMsg(U.HpssicError,
                              "The date '' does not match any of the formats:",
-                             util.epoch,
+                             U.epoch,
                              "")
 
     # -------------------------------------------------------------------------
@@ -387,20 +387,20 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         """
         self.dbgfunc()
         vname = "EXPAND_UNSET"
-        with util.tmpenv(vname, None):
+        with U.tmpenv(vname, None):
             bare_str = "before  $%s   after" % vname
             exp = "before     after"
-            actual = util.expand(bare_str)
+            actual = U.expand(bare_str)
             self.expected(exp, actual)
 
             braced_str = "before/${%s}/after" % vname
             exp = "before//after"
-            actual = util.expand(braced_str)
+            actual = U.expand(braced_str)
             self.expected(exp, actual)
 
             def_str = "before.${%s:-default-value}.after" % vname
             exp = "before.default-value.after"
-            actual = util.expand(def_str)
+            actual = U.expand(def_str)
             self.expected(exp, actual)
 
     # -------------------------------------------------------------------------
@@ -411,20 +411,20 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         """
         self.dbgfunc()
         vname = "EXPAND_EMPTY"
-        with util.tmpenv(vname, ""):
+        with U.tmpenv(vname, ""):
             bare_str = "before  $%s   after" % vname
             exp = "before     after"
-            actual = util.expand(bare_str)
+            actual = U.expand(bare_str)
             self.expected(exp, actual)
 
             braced_str = "before/${%s}/after" % vname
             exp = "before//after"
-            actual = util.expand(braced_str)
+            actual = U.expand(braced_str)
             self.expected(exp, actual)
 
             def_str = "before.${%s:-default-value}.after" % vname
             exp = "before..after"
-            actual = util.expand(def_str)
+            actual = U.expand(def_str)
             self.expected(exp, actual)
 
     # -------------------------------------------------------------------------
@@ -442,20 +442,20 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         """
         self.dbgfunc()
         vname = "EXPAND_FILLED"
-        with util.tmpenv(vname, "SOMETHING"):
+        with U.tmpenv(vname, "SOMETHING"):
             bare_str = "before  $%s   after" % vname
             exp = "before  SOMETHING   after"
-            actual = util.expand(bare_str)
+            actual = U.expand(bare_str)
             self.expected(exp, actual)
 
             braced_str = "before/${%s}/after" % vname
             exp = "before/SOMETHING/after"
-            actual = util.expand(braced_str)
+            actual = U.expand(braced_str)
             self.expected(exp, actual)
 
             def_str = "before.${%s:-default-value}.after" % vname
             exp = "before.SOMETHING.after"
-            actual = util.expand(def_str)
+            actual = U.expand(def_str)
             self.expected(exp, actual)
 
     # -------------------------------------------------------------------------
@@ -469,49 +469,49 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         gdir = U.dirname(hdir)
         odir = U.dirname(gdir)
         exp = gdir
-        self.expected(exp, util.git_repo('.'))
-        self.expected(exp, util.git_repo(__file__))
-        self.expected(exp, util.git_repo(tdir))
-        self.expected(exp, util.git_repo(hdir))
-        self.expected(exp, util.git_repo(gdir))
-        self.expected('', util.git_repo(odir))
-        self.expected('', util.git_repo(U.dirname(odir)))
+        self.expected(exp, U.git_repo('.'))
+        self.expected(exp, U.git_repo(__file__))
+        self.expected(exp, U.git_repo(tdir))
+        self.expected(exp, U.git_repo(hdir))
+        self.expected(exp, U.git_repo(gdir))
+        self.expected('', U.git_repo(odir))
+        self.expected('', U.git_repo(U.dirname(odir)))
 
     # -------------------------------------------------------------------------
     def test_hostname_default(self):
         """
-        Calling util.hostname() with no argument should get the short hostname
+        Calling U.hostname() with no argument should get the short hostname
         """
         self.dbgfunc()
-        hn = util.hostname()
+        hn = U.hostname()
         self.assertFalse('.' in hn,
                          "Short hostname expected but got '%s'" % hn)
 
     # -------------------------------------------------------------------------
     def test_hostname_long(self):
         """
-        Calling util.hostname(long=True) or util.hostname(True) should get the
+        Calling U.hostname(long=True) or U.hostname(True) should get the
         long hostanme
         """
         self.dbgfunc()
-        hn = util.hostname(long=True)
+        hn = U.hostname(long=True)
         self.assertTrue('.' in hn,
                         "Expected long hostname but got '%s'" % hn)
-        hn = util.hostname(True)
+        hn = U.hostname(True)
         self.assertTrue('.' in hn,
                         "Expected long hostname but got '%s'" % hn)
 
     # -------------------------------------------------------------------------
     def test_hostname_short(self):
         """
-        Calling util.hostname(long=False) or util.hostname(False) should get
+        Calling U.hostname(long=False) or U.hostname(False) should get
         the short hostname
         """
         self.dbgfunc()
-        hn = util.hostname(long=False)
+        hn = U.hostname(long=False)
         self.assertFalse('.' in hn,
                          "Expected short hostname but got '%s'" % hn)
-        hn = util.hostname(False)
+        hn = U.hostname(False)
         self.assertFalse('.' in hn,
                          "Expected short hostname but got '%s'" % hn)
 
@@ -524,15 +524,15 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         """
         self.dbgfunc()
         exp = '\n"""\nabc\n"""'
-        act = util.line_quote('abc')
+        act = U.line_quote('abc')
         self.expected(exp, act)
 
         exp = '\n"""\nabc\n"""'
-        act = util.line_quote("'abc'")
+        act = U.line_quote("'abc'")
         self.expected(exp, act)
 
         exp = '\n"""\nabc\n"""'
-        act = util.line_quote('"abc"')
+        act = U.line_quote('"abc"')
         self.expected(exp, act)
 
     # -------------------------------------------------------------------------
@@ -575,9 +575,9 @@ class UtilTest(hx.testhelp.HelpedTestCase):
                 '51(tpb) Copies: 1 Firewall: off [hsi.4.0.1.3 Wed Jun 12 10:0',
                 '3:13 EDT 2013] \r\n\r\rO:[/home/tpb']
         td_s = ''.join(td_l)
-        self.assertRaisesMsg(util.HpssicError,
+        self.assertRaisesMsg(U.HpssicError,
                              MSG.lsp_output_not_found,
-                             util.lsp_parse,
+                             U.lsp_parse,
                              td_s)
 
     # -------------------------------------------------------------------------
@@ -588,9 +588,9 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         self.dbgfunc()
         td_l = ["xxx", "DIRECTORY", "/home/tpb/corefiles"]
         td_s = "\t".join(td_l)
-        self.assertRaisesMsg(util.HpssicError,
+        self.assertRaisesMsg(U.HpssicError,
                              MSG.lsp_invalid_file_type,
-                             util.lsp_parse,
+                             U.lsp_parse,
                              td_s)
 
     # -------------------------------------------------------------------------
@@ -601,7 +601,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         self.dbgfunc()
         td_l = ["DIRECTORY", "/home/tpb/corefiles"]
         td_s = "\t".join(td_l)
-        rv = util.lsp_parse(td_s)
+        rv = U.lsp_parse(td_s)
         self.expected(td_l[0][0].lower(), rv[0])
         self.expected(td_l[1], rv[1])
         self.expected(None, rv[2])
@@ -620,7 +620,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
                 "09/25/2014",    "13:03:35",
                 "09/25/2014",    "13:03:35"]
         td_s = "\t".join(td_l)
-        rv = util.lsp_parse(td_s)
+        rv = U.lsp_parse(td_s)
         self.expected(td_l[0][0].lower(), rv[0])
         self.expected(td_l[1], rv[1])
         self.expected(td_l[5].strip(), rv[2])
@@ -641,7 +641,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
                 "09/16/2014",    "16:50:45",
                 "09/16/2014",    "16:50:57"]
         td_s = " ls -P\r\n" + "\t".join(td_l) + "\r\n\r\rO:[/home/tpb"
-        rv = util.lsp_parse(td_s)
+        rv = U.lsp_parse(td_s)
         self.expected(td_l[0][0].lower(), rv[0])
         self.expected(td_l[1], rv[1])
         self.expected(td_l[5], rv[2])
@@ -653,7 +653,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         Return the name of the calling function.
         """
         self.dbgfunc()
-        actual = util.my_name()
+        actual = U.my_name()
         expected = 'test_my_name'
         self.expected(expected, actual)
 
@@ -667,15 +667,15 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         self.dbgfunc()
         tl = [1, 2, 3, 4, 5]
         x = copy.copy(tl)
-        e = util.pop0(x)
+        e = U.pop0(x)
         self.expected(1, e)
         self.expected(tl[1:], x)
         self.expected(len(tl) - 1, len(x))
 
         x = ['abc']
-        self.expected('abc', util.pop0(x))
-        self.expected(None, util.pop0(x))
-        self.expected(None, util.pop0(x))
+        self.expected('abc', U.pop0(x))
+        self.expected(None, U.pop0(x))
+        self.expected(None, U.pop0(x))
 
     # -------------------------------------------------------------------------
     def test_rgxin(self):
@@ -705,13 +705,13 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         Test the reverse read file class
         """
         self.dbgfunc()
-        tdfile = self.tmpdir(util.my_name())
+        tdfile = self.tmpdir(U.my_name())
         clist = [chr(ord('a') + x) for x in range(0, 16)]
         with open(tdfile, 'w') as f:
             for c in clist:
                 f.write(c * 64)
 
-        rf = util.RRfile.open(tdfile, 'r')
+        rf = U.RRfile.open(tdfile, 'r')
         zlist = clist
         buf = rf.revread()
         while buf != '':
@@ -729,13 +729,13 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         Test the reverse read file class
         """
         self.dbgfunc()
-        tdfile = self.tmpdir(util.my_name())
+        tdfile = self.tmpdir(U.my_name())
         clist = [chr(ord('a') + x) for x in range(0, 4)]
         with open(tdfile, 'w') as f:
             for c in clist:
                 f.write(c * 16)
 
-        rf = util.RRfile.open(tdfile, 'r')
+        rf = U.RRfile.open(tdfile, 'r')
         zlist = clist
         buf = rf.revread()
         self.expected(64, len(buf))
@@ -747,7 +747,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
     # -------------------------------------------------------------------------
     def test_scale(self):
         """
-        util.scale("25") should return 25
+        U.scale("25") should return 25
         """
         # ---------------------------------------------------------------------
         def doit(factor, spec, kb=-1, exponent=1):
@@ -760,13 +760,13 @@ class UtilTest(hx.testhelp.HelpedTestCase):
             else:
                 base = 1000
             result = factor * base**exponent
-            self.expected(result, util.scale(**kw))
+            self.expected(result, U.scale(**kw))
 
         self.dbgfunc()
-        self.expected(1, util.scale())
-        self.expected(0, util.scale(''))
-        self.expected(5, util.scale('5'))
-        self.expected(7, util.scale('7 b'))
+        self.expected(1, U.scale())
+        self.expected(0, U.scale(''))
+        self.expected(5, U.scale('5'))
+        self.expected(7, U.scale('7 b'))
 
         cycle = 1
         for kmgt in ['k', 'm', 'g', 't', 'p', 'e', 'z', 'y']:
@@ -787,7 +787,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         mtime rather than rounding them.
         """
         self.dbgfunc()
-        testpath = self.tmpdir(util.my_name())
+        testpath = self.tmpdir(U.my_name())
         self.touch_payload(testpath, offs=(), new=True)
 
     # -------------------------------------------------------------------------
@@ -796,7 +796,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         Call touch on a path that does not exist with atime, no mtime
         """
         self.dbgfunc()
-        testpath = self.tmpdir(util.my_name())
+        testpath = self.tmpdir(U.my_name())
         self.touch_payload(testpath, offs=(-75, None), new=True)
 
     # -------------------------------------------------------------------------
@@ -805,7 +805,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         Call touch on a path that does not exist with mtime, no atime
         """
         self.dbgfunc()
-        testpath = self.tmpdir(util.my_name())
+        testpath = self.tmpdir(U.my_name())
         self.touch_payload(testpath, offs=(None, -32), new=True)
 
     # -------------------------------------------------------------------------
@@ -814,7 +814,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         Call touch on a path that does not exist with both atime and mtime
         """
         self.dbgfunc()
-        testpath = self.tmpdir(util.my_name())
+        testpath = self.tmpdir(U.my_name())
         self.touch_payload(testpath, offs=(-175, -3423), new=True)
 
     # -------------------------------------------------------------------------
@@ -823,7 +823,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         Call touch on a path that does exist with no amtime tuple
         """
         self.dbgfunc()
-        testpath = self.tmpdir(util.my_name())
+        testpath = self.tmpdir(U.my_name())
         self.touch_payload(testpath, offs=())
 
     # -------------------------------------------------------------------------
@@ -832,7 +832,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         Call touch on a path that does exist with atime, no mtime
         """
         self.dbgfunc()
-        testpath = self.tmpdir(util.my_name())
+        testpath = self.tmpdir(U.my_name())
         self.touch_payload(testpath, offs=(-75, None))
 
     # -------------------------------------------------------------------------
@@ -841,7 +841,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         Call touch on a path that does exist with mtime, no atime
         """
         self.dbgfunc()
-        testpath = self.tmpdir(util.my_name())
+        testpath = self.tmpdir(U.my_name())
         self.touch_payload(testpath, offs=(None, -32))
 
     # -------------------------------------------------------------------------
@@ -850,13 +850,13 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         Call touch on a path that does exist with both atime and mtime
         """
         self.dbgfunc()
-        testpath = self.tmpdir(util.my_name())
+        testpath = self.tmpdir(U.my_name())
         self.touch_payload(testpath, offs=(-175, -3423))
 
     # -------------------------------------------------------------------------
     def touch_payload(self, testpath, offs=(), new=False):
         """
-        Testing util.touch.
+        Testing U.touch.
 
         *testpath* is the path of the file to be touched.
 
@@ -866,15 +866,15 @@ class UtilTest(hx.testhelp.HelpedTestCase):
 
         *ctup* is a tuple of two integers, (), or None. If it contains two
         integers, they are applied as offsets from the current time. If it is
-        None, None is passed to util.touch(). If it is (), no argument is
-        passed to util.touch in that position.
+        None, None is passed to U.touch(). If it is (), no argument is
+        passed to U.touch in that position.
 
         *new* indicates whether we are touching a new (non-existent) file or a
          file that already exists.
         """
         if new:
             # testing new file -- make sure it does not exist
-            util.conditional_rm(testpath)
+            U.conditional_rm(testpath)
         else:
             # testing old file -- make sure it DOES exist
             open(testpath, 'a').close()
@@ -886,7 +886,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         args = [testpath]
         if offs != ():
             args.append(self.touch_tuple(now, offs))
-        util.touch(*args)
+        U.touch(*args)
 
         # verify that the file exists
         self.assertPathPresent(testpath)
