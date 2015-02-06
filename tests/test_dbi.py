@@ -2289,7 +2289,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
         self.dbgfunc()
         xcf = hx.cfg.config()
         xcf.read('mysql.cfg')
-        section = xcf.sections()[0]
+        section = xcf.db_section()
         exp = "DBImysql(dbname='%s')" % xcf.get(section, 'dbname')
         a = self.DBI()
         self.expected(exp, repr(a))

@@ -597,16 +597,14 @@ class config(ConfigParser.ConfigParser):
         otherwise
         """
         sl = self.sections()
-        sl.remove(self.meta_section())
-        rval = None
-        for s in sl:
-            if self.has_option(s, 'dbtype'):
-                rval = s
-                break
-        if rval is None:
-            raise HXerror(msg.missing_db_section)
-        else:
-            return rval
+        m = self.meta_section()
+        if m in sl:
+            sl.remove(m)
+
+        db_l = [x for x in sl if self.has_option(x, 'dbtype')]
+        if 0 == len(db_l):
+            raise U.HXerror(msg.missing_db_section)
+        return db_l[0]
 
     # -------------------------------------------------------------------------
     def qt_parse(self, spec):
