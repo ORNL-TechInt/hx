@@ -462,15 +462,13 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         Make sure git_repo() works on relative paths
         """
         self.dbgfunc()
-        tdir = U.dirname(__file__)
-        hdir = U.dirname(tdir)
-        gdir = U.dirname(hdir)
-        odir = U.dirname(gdir)
+        tdir = U.dirname(__file__)   # .../hx/dev/tests
+        gdir = U.dirname(tdir)       # .../hx/dev
+        odir = U.dirname(gdir)       # .../hx
         exp = gdir
         self.expected(exp, U.git_repo('.'))
         self.expected(exp, U.git_repo(__file__))
         self.expected(exp, U.git_repo(tdir))
-        self.expected(exp, U.git_repo(hdir))
         self.expected(exp, U.git_repo(gdir))
         self.expected('', U.git_repo(odir))
         self.expected('', U.git_repo(U.dirname(odir)))
