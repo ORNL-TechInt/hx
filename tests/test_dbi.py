@@ -2921,8 +2921,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         self.dbgfunc()
         db = self.DBI()
-        tname = '%s.cos' % db._dbobj.tbl_prefix
-        rows = db.select(table=tname,
+        rows = db.select(table='cos',
                          fields=['cos_id', 'hier_id'])
         self.expected(2, len(rows[0].keys()))
         for exp in ['HIER_ID', 'COS_ID']:
@@ -2941,8 +2940,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         hx.cfg.add_config(filename='hx_test.cfg', close=True)
         hx.cfg.add_config(filename='db2.cfg')
         db = self.DBI(dbname='sub')
-        tname = '%s.bitfile' % db._dbobj.tbl_prefix
-        rows = db.select(table=tname,
+        rows = db.select(table='bitfile',
                          fields=['max(bfid) as mbf',
                                  'bfattr_cos_id'],
                          groupby='bfattr_cos_id')
@@ -2962,11 +2960,10 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.dbgfunc()
         db = self.DBI(dbname='sub')
         exp = "On select(), groupby clause must be a string"
-        tname = '%s.bitfile' % db._dbobj.tbl_prefix
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              exp,
                              db.select,
-                             table=tname,
+                             table='bitfile',
                              fields=['max(bfid) as mbf',
                                      'bfattr_cos_id'],
                              groupby=17)
@@ -2980,12 +2977,11 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         self.dbgfunc()
         db = self.DBI(dbname='sub')
-        tname = db.prefix('bitfile')
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              '"UNKNOWN_FIELD" is not valid in the context ' +
                              'where it',
                              db.select,
-                             table=db.prefix('bitfile'),
+                             table='bitfile',
                              fields=['max(bfid) as mbf',
                                      'bfattr_cos_id'],
                              groupby='unknown_field')
@@ -3052,7 +3048,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.dbgfunc()
         db = self.DBI(dbname='sub')
         rlim = 3
-        rows = db.select(table=db.prefix('nsobject'),
+        rows = db.select(table='nsobject',
                          fields=["object_id",
                                  "name",
                                  "bitfile_id"],
@@ -3069,7 +3065,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.dbgfunc()
         db = self.DBI(dbname='sub')
         rlim = 4.5
-        rows = db.select(table=db.prefix('nsobject'),
+        rows = db.select(table='nsobject',
                          fields=["object_id",
                                  "name",
                                  "bitfile_id"],
@@ -3088,7 +3084,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.wildcard_selects,
                              db.select,
-                             table=db.prefix("cos"),
+                             table="cos",
                              fields=[])
         db.close()
 
@@ -3104,7 +3100,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.wildcard_selects,
                              db.select,
-                             table=db.prefix('pvlpv'))
+                             table='pvlpv')
         db.close()
 
     # -------------------------------------------------------------------------
@@ -3115,14 +3111,14 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         self.dbgfunc()
         db = self.DBI(dbname='sub')
-        ordered_rows = db.select(table=db.prefix('bitfile'),
+        ordered_rows = db.select(table='bitfile',
                                  fields=['bfid'],
                                  orderby='')
-        unordered_rows = db.select(table=db.prefix('bitfile'),
+        unordered_rows = db.select(table='bitfile',
                                    fields=['bfid'])
-        okl = [CrawlDBI.DBIdb2.hexstr(x['BFID'])
+        okl = [hx.dbi.DBIdb2.hexstr(x['BFID'])
                for x in ordered_rows]
-        ukl = [CrawlDBI.DBIdb2.hexstr(x['BFID'])
+        ukl = [hx.dbi.DBIdb2.hexstr(x['BFID'])
                for x in unordered_rows]
         self.expected(ukl, okl)
         db.close()
@@ -3154,8 +3150,8 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.dbgfunc()
         db = self.DBI(dbname='sub')
         flist = ['object_id', 'name', 'bitfile_id']
-        w_rows = db.select(table=db.prefix('nsobject'), fields=flist, where='')
-        x_rows = db.select(table=db.prefix('nsobject'), fields=flist)
+        w_rows = db.select(table='nsobject', fields=flist, where='')
+        x_rows = db.select(table='nsobject', fields=flist)
         self.expected(len(x_rows), len(w_rows))
         for exp, actual in zip(x_rows, w_rows):
             self.expected(actual, exp)
@@ -3172,7 +3168,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), data must be a tuple",
                              db.select,
-                             table=db.prefix("bitfile"),
+                             table="bitfile",
                              fields=self.fnames,
                              where="desc_name = ?",
                              data='prudhoe')
@@ -3189,7 +3185,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), fields must be a list",
                              db.select,
-                             table=db.prefix("bitfile"),
+                             table="bitfile",
                              fields=92,
                              where="desc_name = ?",
                              data=('prudhoe', ))
@@ -3206,7 +3202,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "Data would be ignored",
                              db.select,
-                             table=db.prefix("bitfile"),
+                             table="bitfile",
                              fields=self.fnames,
                              where="desc_name = ''",
                              data=('prudhoe', ))
@@ -3221,7 +3217,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.dbgfunc()
         db = self.DBI(dbname='sub')
         crit = 'logfile'
-        rows = db.select(table=db.prefix('nsobject'),
+        rows = db.select(table='nsobject',
                          fields=['name', 'object_id', 'bitfile_id'],
                          where="name like '%%%s%%'" % crit,
                          data=())
@@ -3242,7 +3238,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), orderby clause must be a string",
                              db.select,
-                             table=db.prefix("bitfile"),
+                             table="bitfile",
                              fields=['bfid'],
                              orderby=22)
         db.close()
@@ -3274,7 +3270,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "On select(), where clause must be a string",
                              db.select,
-                             table=db.prefix("nsobject"),
+                             table="nsobject",
                              fields=['name',
                                      'object_id',
                                      'bitfile_id'],
@@ -3289,14 +3285,14 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         """
         self.dbgfunc()
         db = self.DBI(dbname='sub')
-        ordered_rows = db.select(table=db.prefix('bitfile'),
+        ordered_rows = db.select(table='bitfile',
                                  fields=['bfid'],
                                  orderby='bfid')
 
-        ford = [CrawlDBI.DBIdb2.hexstr(x['BFID'])
+        ford = [hx.dbi.DBIdb2.hexstr(x['BFID'])
                 for x in ordered_rows]
 
-        sord = sorted([CrawlDBI.DBIdb2.hexstr(x['BFID'])
+        sord = sorted([hx.dbi.DBIdb2.hexstr(x['BFID'])
                        for x in ordered_rows])
 
         self.expected(sord, ford)
@@ -3311,7 +3307,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.dbgfunc()
         db = self.DBI(dbname='sub')
         crit = 'logfile'
-        rows = db.select(table=db.prefix('nsobject'),
+        rows = db.select(table='nsobject',
                          fields=['name', 'object_id', 'bitfile_id'],
                          where="name like '%?%'",
                          data=(crit,))
@@ -3332,7 +3328,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              "0 params bound not matching 1 required",
                              db.select,
-                             table=db.prefix("bitfile"),
+                             table="bitfile",
                              fields=['bfid'],
                              data=(),
                              where="DESC_NAME = ?")
@@ -3347,7 +3343,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.dbgfunc()
         db = self.DBI(dbname='sub')
         crit = 'logfile'
-        rows = db.select(table=db.prefix('nsobject'),
+        rows = db.select(table='nsobject',
                          fields=['name', 'object_id', 'bitfile_id'],
                          where="name like '%%%s%%'" % crit)
         for x in rows:
@@ -3387,7 +3383,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.db2_unsupported_S % "INSERT",
                              db.insert,
-                             table=db.prefix("bogus"),
+                             table="bogus",
                              data=[('a', 'b', 'c')])
         db.close()
 
@@ -3401,7 +3397,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.db2_unsupported_S % "CREATE",
                              db.create,
-                             table=db.prefix("nonesuch"),
+                             table="nonesuch",
                              fields=self.fdef)
         db.close()
 
@@ -3415,7 +3411,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.db2_unsupported_S % "DELETE",
                              db.delete,
-                             table=db.prefix("bogus"),
+                             table="bogus",
                              data=[('a',)],
                              where="field = ?")
         db.close()
@@ -3430,7 +3426,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.db2_unsupported_S % "DROP",
                              db.drop,
-                             table=db.prefix("bogus"))
+                             table="bogus")
         db.close()
 
     # -------------------------------------------------------------------------
@@ -3443,7 +3439,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         self.assertRaisesMsg(hx.dbi.DBIerror,
                              hx.msg.db2_unsupported_S % "UPDATE",
                              db.update,
-                             table=db.prefix("bogus"),
+                             table="bogus",
                              fields=['one', 'two'],
                              data=[('a', 'b', 'c')],
                              where="one = ?")
