@@ -530,44 +530,6 @@ def lineno():
 
 
 # -----------------------------------------------------------------------------
-def lsp_parse(lspout):
-    """
-    We assume *lspout* comes from an hsi 'ls -P' command and parse it as such,
-    returning file type ('f' or 'd'), file name, cartridge (if available), and
-    cos (if available). Directories don't have cartridge or cos values.
-    """
-    for line in lspout.split("\r\n"):
-        result = re.findall("(FILE|DIRECTORY)", line)
-        if [] != result:
-            break
-
-    if [] == result:
-        raise HXerror(MSG.lsp_output_not_found)
-
-    x = line.split("\t")
-    itype = pop0(x)        # 'FILE' or 'DIRECTORY'
-    if itype == 'FILE':
-        itype = 'f'
-    elif itype == 'DIRECTORY':
-        itype = 'd'
-    else:
-        raise HXerror(MSG.lsp_invalid_file_type)
-    iname = pop0(x)        # name of file or dir
-    pop0(x)
-    pop0(x)
-    pop0(x)
-    cart = pop0(x)         # name of cart
-    if cart is not None:
-        cart = cart.strip()
-    cos = pop0(x)          # name of cos
-    if cos is not None:
-        cos = cos.strip()
-    else:
-        cos = ''
-    return(itype, iname, cart, cos)
-
-
-# -----------------------------------------------------------------------------
 def map_size_unit(spec, kb=1000):
     """
     b  -> 1
