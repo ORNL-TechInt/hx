@@ -882,6 +882,8 @@ if mysql_available:
             elif table == '':
                 raise DBIerror("On alter(), table name must not be empty",
                                dbname=self.dbname)
+            elif addcol is not None and dropcol is not None:
+                raise DBIerror(msg.alter_mutual_excl, dbname=self.dbname)
             elif addcol is not None:
                 if addcol.strip() == '':
                     raise DBIerror("On alter(), addcol must not be empty",

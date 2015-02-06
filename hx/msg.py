@@ -1,3 +1,5 @@
+alter_mutual_excl = ("addcol and dropcol are mutually exclusive")
+
 alter_table_string = ("On alter(), table name must be a string")
 
 cfg_missing_parm_S = ("%s required on call to DBI()")
