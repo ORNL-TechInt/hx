@@ -1526,11 +1526,12 @@ if db2_available:
             DBIdb2: Check whether a table exists in a db2 database
             """
             try:
+                pfx = self.tbl_prefix.upper().strip('.')
                 rows = self.select(table="@syscat.tables",
                                    fields=['tabname'],
-                                   where="tabschema = '%s' and " +
-                                   "tabname = '%s'" % (self.prefix('').upper(),
-                                                       table.upper()))
+                                   where=("tabschema = '%s'" % pfx +
+                                          " and tabname = '%s'" %
+                                          table.upper()))
                 if 0 == len(rows):
                     return False
                 elif 1 == len(rows):
