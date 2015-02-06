@@ -2254,34 +2254,30 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
            an exception
         """
         self.dbgfunc()
-        self.fail('Needs attention')
+
         tname = hx.util.my_name()
         db = self.DBI()
         db.create(table=tname, fields=self.fdef)
-        rv = dbschem.alter_table(table=tname,
-                                 addcol="missing int",
-                                 pos="first",
-                                 cfg=tcfg)
-        self.expected("Successful", rv)
+        db.alter(table=tname,
+                 addcol="missing int",
+                 pos="first")
+        # self.expected("Successful", rv)
         z = db.describe(table=tname)
         self.assertTrue(any(['missing' in x for x in z]),
                         "Expected field 'missing' in %s" % repr(z))
 
-        rv = dbschem.alter_table(table=tname,
-                                 dropcol="missing",
-                                 cfg=tcfg)
-        self.expected("Successful", rv)
+        db.alter(table=tname, dropcol="missing")
+
         z = db.describe(table=tname)
         self.assertFalse(any(['missing' in x for x in z]),
                          "Field 'missing' should not appear in %s" % repr(z))
 
         self.assertRaisesMsg(hx.dbi.DBIerror,
-                             "addcol and dropcol are mutually exclusive",
-                             dbschem.alter_table,
+                             hx.msg.alter_mutual_excl,
+                             db.alter,
                              table=tname,
                              addcol="missing int",
-                             dropcol="missing",
-                             cfg=tcfg)
+                             dropcol="missing")
         db.close()
 
     # -------------------------------------------------------------------------
