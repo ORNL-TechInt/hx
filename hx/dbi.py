@@ -34,8 +34,6 @@ class DBI_abstract(object):
     DBI_abstract: Each of the specific database interface classes (DBIsqlite,
     DBImysql, etc.) inherit from this one
     """
-    settable_attrl = ['cfg', 'dbname', 'host', 'username', 'password',
-                      'tbl_prefix', 'timeout']
 
     # -------------------------------------------------------------------------
     def prefix(self, tabname):
@@ -58,11 +56,11 @@ class DBI_abstract(object):
     # -------------------------------------------------------------------------
     def retry(self, exception, payload, *args, **kwargs):
         """
-        Call *payload*. If it does not throw an exception, we're done --
-        return. OTOH, if it does throw an exception, we call the database
-        specific err_handler(). It will either throw a DBIerror up the stack
-        and we're done, or it will sleep an appropriate amount of time and
-        return so we can keep trying again until the timeout expires.
+        DBI_abstract: Call *payload*. If it does not throw an exception, we're
+        done -- return. OTOH, if it does throw an exception, we call the
+        database specific err_handler(). It will either throw a DBIerror up the
+        stack and we're done, or it will sleep an appropriate amount of time
+        and return so we can keep trying again until the timeout expires.
 
         The timeout is set when the DBI object is instantiated.
         """

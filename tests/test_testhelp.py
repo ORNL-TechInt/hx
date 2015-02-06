@@ -28,63 +28,6 @@ class TesthelpTest(hx.testhelp.HelpedTestCase):
     Tests for testhelp code.
     """
     # -------------------------------------------------------------------------
-    def test_all_tests(self):
-        """
-        The all_test() routine selects tests from a list based on the filter
-        (its second argument). We sort the lists to ensure they'll match as
-        long as they have the same contents.
-        """
-        self.dbgfunc()
-        all = ['TesthelpTest.test_all_tests',
-               'TesthelpTest.test_list_tests',
-               'TesthelpTest.test_expected_vs_got'].sort()
-        l = hx.testhelp.all_tests('__main__').sort()
-        self.expected(all, l)
-        l = hx.testhelp.all_tests('__main__', 'no such tests')
-        self.expected([], l)
-        l = hx.testhelp.all_tests('__main__', 'helpTest').sort()
-        self.expected(all, l)
-
-    # -------------------------------------------------------------------------
-    def test_list_tests(self):
-        """
-        Method redirected_list_test() tests the list_tests() routine.
-        Depending on its arguments, it should select different entries from
-        the list of tests in tlist. Since list_tests() writes directly to
-        stdout, we have to redirect stdout to a StringIO object momentarily.
-        """
-        self.dbgfunc()
-        tlist = ['one', 'two', 'three', 'four', 'five']
-        self.try_redirected_list([],
-                                 '',
-                                 tlist,
-                                 "one\ntwo\nthree\nfour\nfive\n")
-        self.try_redirected_list(['', 'o'],
-                                 '',
-                                 tlist,
-                                 "one\ntwo\nfour\n")
-        self.try_redirected_list(['', 'e'],
-                                 '',
-                                 tlist,
-                                 "one\nthree\nfive\n")
-
-    # -------------------------------------------------------------------------
-    def try_redirected_list(self, args, final, testlist, expected):
-        """
-        Handle one of the list_tests() tests from the routine above.
-        """
-        self.dbgfunc()
-        s = StringIO.StringIO()
-        save_stdout = sys.stdout
-        sys.stdout = s
-        hx.testhelp.list_tests(args, final, testlist)
-        sys.stdout = save_stdout
-
-        r = s.getvalue()
-        s.close()
-        self.expected(expected, r)
-
-    # -------------------------------------------------------------------------
     def test_expected_vs_got(self):
         """
         testhelpTest.test_expected_vs_got

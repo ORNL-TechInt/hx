@@ -2,7 +2,6 @@ import contextlib
 import copy
 import logging
 import logging.handlers as logh
-# import messages as MSG
 import os
 import pdb
 import random
@@ -220,6 +219,8 @@ def basename(path):
 # -----------------------------------------------------------------------------
 def default_logpath():
     """
+    !@! Update tests to expect an exception if logging called with no log path
+    provided -- there should be no default
     Return the ultimate default log path
     """
     if os.getuid() == 0:
@@ -227,16 +228,6 @@ def default_logpath():
     else:
         rval = "/tmp/hpssic.log"
     return rval
-
-
-# -----------------------------------------------------------------------------
-def default_plugins():
-    """
-    Return the default list of currently defined plugins. This should be the
-    only place in the system where they are listed, so when the list changes,
-    only this routine need be updated.
-    """
-    return "cv,mpra,rpt,tcc"
 
 
 # -----------------------------------------------------------------------------
@@ -368,6 +359,7 @@ def daybase(epoch):
 # -----------------------------------------------------------------------------
 def dispatch(modname, prefix, args):
     """
+    !@! Needs testing
     Look in module *modname* for routine *prefix*_*args*[1]. Call it with
     *args*[2:].
     """
@@ -387,6 +379,7 @@ def dispatch(modname, prefix, args):
 # -----------------------------------------------------------------------------
 def dispatch_help(mod, prefix, cmd=None):
     """
+    !@! Needs testing
     Display help as appropriate. If cmd is None, report a one liner for each
     available function. If cmd is not None, look up its doc string and report
     it.
@@ -410,6 +403,7 @@ def dispatch_help(mod, prefix, cmd=None):
 # -----------------------------------------------------------------------------
 def env_update(cfg):
     """
+    !@! Needs optional section argument
     Update the environment based on the contents of the 'env' section of the
     config object.
     """
@@ -464,6 +458,7 @@ def epoch(ymdhms):
 # -----------------------------------------------------------------------------
 def filename():
     """
+    !@! DEPRECATE? -- use __main__.__file__ or sys.modules[name].__file__
     Return the name of the file where the currently running code resides.
     """
     return sys._getframe(1).f_code.co_filename
@@ -492,6 +487,7 @@ def hostname(long=False):
 # -----------------------------------------------------------------------------
 def git_repo(path):
     """
+    !@! Is this really needed?
     If path is inside a git repo (including the root), return the root of the
     git repo. Otherwise, return ''
     """
@@ -620,6 +616,7 @@ def month_dict(arg=None):
 # -----------------------------------------------------------------------------
 def my_name():
     """
+    !@! could this be done with the inspect module?
     Return the caller's name
     """
     return sys._getframe(1).f_code.co_name
@@ -636,14 +633,6 @@ def pop0(list):
     except IndexError:
         rval = None
     return rval
-
-
-# -----------------------------------------------------------------------------
-def realpath(fakepath):
-    """
-    Convenience wrapper for os.path.realpath()
-    """
-    return os.path.realpath(fakepath)
 
 
 # -----------------------------------------------------------------------------
@@ -748,6 +737,7 @@ def amtime_tuple(base=None):
 # -----------------------------------------------------------------------------
 def date_parse(data, idx):
     """
+    !@! This caching is overkill -- Python caches the last 100 regexes for us
     Compile and cache the regexp for parsing dates from log files.
     """
     try:
@@ -819,8 +809,7 @@ def rstring(lolen=10, hilen=25):
 # -----------------------------------------------------------------------------
 def write_file(filename, mode=0644, content=None):
     """
-    Write a file, optionally setting its permission bits. This should be in
-    util.py.
+    Write a file, optionally setting its permission bits.
     """
     f = open(filename, 'w')
     if type(content) == str:

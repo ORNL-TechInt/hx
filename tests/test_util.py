@@ -476,6 +476,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
     # -------------------------------------------------------------------------
     def test_hostname_default(self):
         """
+        !@! could use unexpected_in
         Calling U.hostname() with no argument should get the short hostname
         """
         self.dbgfunc()

@@ -1,6 +1,7 @@
 DODO.org
 TAGS
 .ackrc
+.coverage
 *.pyc
 *.log
 *.cfg

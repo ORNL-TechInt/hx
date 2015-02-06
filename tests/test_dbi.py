@@ -238,18 +238,6 @@ class DBI_in_Base(object):
                              db.close)
 
     # -------------------------------------------------------------------------
-    def test_close_deep(self):
-        """
-        DBI_in_Base: Closing a closed database should generate an exception.
-        """
-        self.dbgfunc()
-        db = self.DBI()
-        db.close()
-        self.assertRaisesRegex(hx.dbi.DBIerror,
-                               hx.msg.db_closed_already_rgx,
-                               db._dbobj.close)
-
-    # -------------------------------------------------------------------------
     def test_close_open(self):
         """
         DBI_in_Base: Closing an open database should work.
@@ -342,18 +330,6 @@ class DBI_in_Base(object):
                                badattr='frooble')
 
     # -------------------------------------------------------------------------
-    def test_ctor_dbtype_bad(self):
-        """
-        DBI_in_Base: With dbtype value other than 'sqlite', 'mysql', or 'db2',
-        constructor should throw exception
-        """
-        self.dbgfunc()
-        self.assertRaisesMsg(hx.dbi.DBIerror,
-                             hx.msg.valid_dbtype,
-                             hx.dbi.DBI,
-                             dbtype='invalid-dbtype')
-
-    # -------------------------------------------------------------------------
     def test_ctor_dbtype_none(self):
         """
         DBI_in_Base: Without dbtype, constructor should throw exception
@@ -427,6 +403,7 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_gb_ns(self):
         """
+        !@! HCM
         DBI_in_Base: Select with a group by clause that is not a string --
         should get an exception.
         """
@@ -444,6 +421,7 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_gb_u(self):
         """
+        !@! HCM
         DBI_in_Base: Select with a group by clause on a field that is unknown
         should get an exception.
         """
@@ -479,6 +457,7 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_q_mtd(self):
         """
+        !@! HCM
         DBI_in_Base: Calling select() with a where clause with a '?' and an
         empty data list should get an exception
         """
@@ -503,6 +482,7 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_nq_ld(self):
         """
+        !@! HCM
         DBI_in_Base: Calling select() with where clause with no '?' and data in
         the list should get an exception -- the data would be ignored
         """
@@ -536,6 +516,7 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_l_nint(self):
         """
+        !@! HCM
         DBI_in_Base: select with limit not an int should throw exception
         """
         self.dbgfunc()
@@ -552,6 +533,7 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_l_int(self):
         """
+        !@! use expected_in
         DBI_in_Base: select with int passed for *limit* should retrieve the
         specified number of records
         """
@@ -571,6 +553,7 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_l_float(self):
         """
+        !@! use expected_in
         DBI_in_Base: select with float passed for *limit* should convert the
         float to an int (without rounding) and use it
         """
@@ -620,6 +603,7 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_mtt(self):
         """
+        !@! HCM
         DBI_in_Base: Calling select() with an empty table name should get an
         exception
         """
@@ -649,6 +633,7 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_nld(self):
         """
+        !@! HCM
         DBI_in_Base: Calling select() with a non-tuple as the data argument
         should get an exception
         """
@@ -666,6 +651,7 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_nlf(self):
         """
+        !@! HCM
         DBI_in_Base: Calling select() with a non-list as the fields argument
         should get an exception
         """
@@ -681,6 +667,7 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_nso(self):
         """
+        !@! HCM
         DBI_in_Base: Calling select() with a non-string orderby argument should
         get an exception
         """
@@ -697,6 +684,7 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_nst(self):
         """
+        !@! HCM
         DBI_in_Base: Calling select() with a non-string table argument should
         get an exception
         """
@@ -712,6 +700,7 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_nsw(self):
         """
+        !@! HCM
         DBI_in_Base: Calling select() with a non-string where argument should
         get an exception
         """
@@ -822,6 +811,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_alter_add_exists(self):
         """
+        !@! HCM
         DBI_out_Base: Calling alter() to add an existing column should get an
         exception
         """
@@ -844,6 +834,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_alter_add_injection(self):
         """
+        !@! HCM
         DBI_out_Base: Calling alter() to add a column with injection should get
         an exception
         """
@@ -908,6 +899,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_alter_drop_injection(self):
         """
+        !@! HCM
         DBI_out_Base: Calling alter() to drop a column with injection should
           get an exception mysql: exception on injection sqlite: exception on
           drop arg
@@ -928,6 +920,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_alter_drop_nx(self):
         """
+        !@! HCM
         DBI_out_Base: Calling alter() to drop a column that does not exist
         should get an exception mysql: exception on nx col sqlite: exception on
         drop arg
@@ -949,6 +942,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_alter_mt_add(self):
         """
+        !@! HCM
         DBI_out_Base: Calling alter() with an empty add should get an exception
         """
         self.dbgfunc()
@@ -965,6 +959,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_alter_mt_drop(self):
         """
+        !@! HCM
         DBI_out_Base: Calling alter() with an empty add should get an exception
           sqlite: exception on drop argument mysql: exception on empty drop arg
         """
@@ -984,6 +979,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_alter_mt_table(self):
         """
+        !@! HCM
         DBI_out_Base: Calling alter() with no table name should get an
         exception
         """
@@ -1001,6 +997,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_alter_no_action(self):
         """
+        !@! HCM
         DBI_out_Base: Calling alter() with no action should get an exception
         """
         self.dbgfunc()
@@ -1138,6 +1135,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_create_mtf(self):
         """
+        !@! HCM
         DBI_out_Base: Calling create() with an empty field list should get an
         exception
         """
@@ -1153,6 +1151,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_create_mtt(self):
         """
+        !@! HCM
         DBI_out_Base: Calling create() with an empty table name should get an
         exception
         """
@@ -1168,6 +1167,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_create_nlf(self):
         """
+        !@! HCM
         DBI_out_Base: Calling create() with a non-list as the fields argument
         should get an exception
         """
@@ -1231,6 +1231,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_ctor_dbtype_ok(self):
         """
+        !@! use expected_in?
         DBI_out_Base: With dbtype value 'sqlite' or 'mysql', constructor should
         be okay
         """
@@ -1283,6 +1284,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_delete_q_nd(self):
         """
+        !@! HCM
         DBI_out_Base: A delete with a '?' in the where clause and no data tuple
         should get an exception.
         """
@@ -1305,6 +1307,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_delete_nq_td(self):
         """
+        !@! HCM
         DBI_out_Base: A delete with no '?' in the where clause and a non-empty
         data list should get an exception -- the data would be ignored.
         """
@@ -1347,6 +1350,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_delete_mtt(self):
         """
+        !@! HCM
         DBI_out_Base: A delete with an empty table name should throw an
         exception.
         """
@@ -1385,6 +1389,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_delete_ntd(self):
         """
+        !@! HCM
         DBI_out_Base: A delete with a non-tuple data value should throw an
         exception
         """
@@ -1408,6 +1413,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_delete_nst(self):
         """
+        !@! HCM
         DBI_out_Base: A delete with a non-string table name should throw an
         exception
         """
@@ -1431,6 +1437,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_delete_nsw(self):
         """
+        !@! HCM
         DBI_out_Base: A delete with a non-string where argument should throw an
         exception
         """
@@ -1513,6 +1520,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_insert_fnox(self):
         """
+        !@! HCM
         DBI_out_Base: Calling insert on fields not in the table should get an
         exception
         """
@@ -1536,6 +1544,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_insert_mtd(self):
         """
+        !@! HCM
         DBI_out_Base: Calling insert with an empty data list should get an
         exception
         """
@@ -1552,6 +1561,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_insert_mtf(self):
         """
+        !@! HCM
         DBI_out_Base: Calling insert with an empty field list should get an
         exception
         """
@@ -1568,6 +1578,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_insert_mtt(self):
         """
+        !@! HCM
         DBI_out_Base: Calling insert with an empty table name should get an
         exception
         """
@@ -1584,6 +1595,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_insert_nst(self):
         """
+        !@! HCM
         DBI_out_Base: Calling insert with a non-string table name should get an
         exception
         """
@@ -1600,6 +1612,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_insert_nlf(self):
         """
+        !@! HCM
         DBI_out_Base: Calling insert with a non-list fields arg should get an
         exception
         """
@@ -1616,6 +1629,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_insert_nld(self):
         """
+        !@! HCM
         DBI_out_Base: Calling insert with a non-list data arg should get an
         exception
         """
@@ -1632,6 +1646,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_insert_tnox(self):
         """
+        !@! HCM
         DBI_out_Base: Calling insert on a non-existent table should get an
         exception
         """
@@ -1797,6 +1812,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_update_qp(self):
         """
+        !@! HCM
         DBI_out_Base: Calling update() specifying fields should update the
         fields requested. However, placeholders should not be quoted.
         """
@@ -1822,6 +1838,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_update_mtd(self):
         """
+        !@! HCM
         DBI_out_Base: Calling update() with an empty data list should get an
         exception
         """
@@ -1839,6 +1856,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_update_mtf(self):
         """
+        !@! HCM
         DBI_out_Base: Calling update() with an empty field list should get an
         exception
         """
@@ -1856,6 +1874,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_update_mtt(self):
         """
+        !@! HCM
         DBI_out_Base: Calling update() with an empty table name should get an
         exception
         """
@@ -1902,6 +1921,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_update_nlf(self):
         """
+        !@! HCM
         DBI_out_Base: Calling update() with a non-list as the fields argument
         should get an exception
         """
@@ -1919,6 +1939,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_update_nld(self):
         """
+        !@! HCM
         DBI_out_Base: Calling update() with a non-list data argument should get
         an exception
         """
@@ -1952,6 +1973,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_update_nst(self):
         """
+        !@! HCM
         DBI_out_Base: Calling update() with a non-string table argument should
         get an exception
         """
@@ -1969,6 +1991,7 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_update_nsw(self):
         """
+        !@! HCM
         DBI_out_Base: Calling update() with a non-string where argument should
         get an exception
         """
@@ -2195,6 +2218,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_no_hostname(self):
         """
+        !@! HCM
         DBImysqlTest: Called with a non-sqlite dbtype, dbname, and tbl_prefix
         but no hostname (or cfg containing one), the DBI ctor should throw an
         exception
@@ -2211,6 +2235,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_no_password(self):
         """
+        !@! HCM
         DBImysqlTest: Called with a non-sqlite dbtype, dbname, and tbl_prefix
         but no password (or cfg containing one), the DBI ctor should throw an
         exception
@@ -2229,6 +2254,7 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_no_username(self):
         """
+        !@! HCM
         DBImysqlTest: Called with a non-sqlite dbtype, dbname, and tbl_prefix
         but no username (or cfg containing one), the DBI ctor should throw an
         exception
@@ -2384,6 +2410,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_alter_drop_ok(self):
         """
+        !@! HCM
         DBIsqliteTest: Calling alter() to drop a column with valid syntax
         should get an unsupported exception since sqlite does not support this
         operation.
@@ -2433,6 +2460,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_cfg_nosection(self):
         """
+        !@! HCM
         DBIsqliteTest: If the DBI ctor is called with something other than a
         config object in argv[0], it is expected to throw an exception
         """
@@ -2472,6 +2500,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_dbn_dir(self):
         """
+        !@! HCM
         DBIsqliteTest: File dbname exists and is a directory -- we throw an
         exception.
         """
@@ -2506,6 +2535,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_dbn_fifo(self):
         """
+        !@! HCM
         DBIsqliteTest: File dbname exists and is a fifo -- we throw an
         exception
         """
@@ -2545,17 +2575,6 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
                              dbname=self.dbname())
 
     # -------------------------------------------------------------------------
-    def test_ctor_nocfg_nodbtype(self):
-        """
-        DBIsqliteTest: no cfg and no dbtype should get a DBIerror
-        """
-        self.dbgfunc()
-        self.assertRaisesMsg(hx.dbi.DBIerror,
-                             "A dbtype is required",
-                             hx.dbi.DBI,
-                             dbname=self.dbname())
-
-    # -------------------------------------------------------------------------
     def test_ctor_sqlite(self):
         """
         DBIsqliteTest: With a config object specifying sqlite as the database
@@ -2590,6 +2609,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_dbn_sock(self):
         """
+        !@! HCM
         DBIsqliteTest: File dbname is a socket -- we throw an exception
         """
         self.dbgfunc()
@@ -2610,6 +2630,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_dbn_sym_dir(self):
         """
+        !@! HCM
         DBIsqliteTest: File dbname exists is a symlink. We should react to what
         the symlink points at. If it's a directory, we throw an exception.
         """
@@ -2671,6 +2692,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_dbn_text(self):
         """
+        !@! HCM
         DBIsqliteTest: File dbname exists and contains text. We should throw an
         exception
         """
@@ -2720,6 +2742,7 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_err_handler(self):
         """
+        !@! HCM
         DBIsqliteTest: Test the sqlite error handler method
         """
         self.dbgfunc()
@@ -2954,6 +2977,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_select_gb_ns(self):
         """
+        !@! HCM
         DBIdb2Test: Select with a group by clause that is not a string --
         should get an exception.
         """
@@ -2972,6 +2996,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_select_gb_u(self):
         """
+        !@! HCM
         DBIdb2Test: Select with a group by clause on a field that is unknown
         should get an exception.
         """
@@ -3025,6 +3050,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_select_l_nint(self):
         """
+        !@! HCM
         DBIdb2Test: select with limit not an int should throw an exception
         """
         self.dbgfunc()
@@ -3126,6 +3152,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_select_mtt(self):
         """
+        !@! HCM
         DBIdb2Test: Calling select() with an empty table name should get an
         exception
         """
@@ -3160,6 +3187,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_select_nld(self):
         """
+        !@! HCM
         DBIdb2Test: Calling select() with a non-tuple as the data argument
         should get an exception
         """
@@ -3177,6 +3205,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_select_nlf(self):
         """
+        !@! HCM
         DBIdb2Test: Calling select() with a non-list as the fields argument
         should get an exception
         """
@@ -3194,6 +3223,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_select_nq_ld(self):
         """
+        !@! HCM
         DBIdb2Test: Calling select() with where clause with no '?' and data in
         the list should get an exception -- the data would be ignored
         """
@@ -3230,6 +3260,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_select_nso(self):
         """
+        !@! HCM
         DBIdb2Test: Calling select() with a non-string orderby argument should
         get an exception
         """
@@ -3246,6 +3277,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_select_nst(self):
         """
+        !@! HCM
         DBIdb2Test: Calling select() with a non-string table argument should
         get an exception
         """
@@ -3262,6 +3294,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_select_nsw(self):
         """
+        !@! HCM
         DBIdb2Test: Calling select() with a non-string where argument should
         get an exception
         """
@@ -3320,6 +3353,7 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_select_q_mtd(self):
         """
+        !@! HCM
         DBIdb2Test: Calling select() with a where clause with a '?' and an
         empty data list should get an exception
         """

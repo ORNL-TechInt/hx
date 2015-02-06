@@ -31,109 +31,6 @@ import util as U
 
 
 # -----------------------------------------------------------------------------
-def all_tests(name, filter=None):
-    """
-    Return a list of tests in the module <name>.
-    Limit the list to those which contain the string <filter>.
-    """
-    testclasses = []
-    cases = []
-    if filter is None:
-        filter = 'Test'
-    if type(filter) == str:
-        for item in dir(sys.modules[name]):
-            if filter in item:
-                testclasses.append(item)
-    elif type(filter) == list:
-        for item in dir(sys.modules[name]):
-            for f in filter:
-                if f in item:
-                    testclasses.append(item)
-
-    for c in testclasses:
-        cobj = getattr(sys.modules[name], c)
-        for case in unittest.TestLoader().getTestCaseNames(cobj):
-            skip = case.replace('test_', 'skip_', 1)
-            sfunc = getattr(sys.modules[name], skip, None)
-            if sfunc is None:
-                cases.append(['%s.%s' % (c, case), None])
-            else:
-                cases.append(['%s.%s' % (c, case), skip])
-
-    return cases
-
-
-# -----------------------------------------------------------------------------
-def flex_assert(payload, timeout=5.0, interval=0.5, *args, **kwargs):
-    """
-    Sometimes an assertion condition is not quite yet true when we check it but
-    it will be shortly. We don't want to fail out of hand on the first
-    iteration but watch the situation for a short period of time and pass if
-    the conditions eventually pass.
-
-    This routine allows for the following in a test:
-
-        def some_assertions(this, that):
-            assert this
-            assert that
-        flex_assert(some_assertions, 3, .25, this, that)
-
-    flex_assert() will call some_assertions(). If one of the assertions fail,
-    we sleep *interval* seconds and try again. If we time out, we raise the
-    most recent AssertionError. If all assertions pass before the timeout
-    (i.e., some_assertions() returns without throwing any AssertionErrors), we
-    return to the caller, allowing this part of the test to pass.
-    """
-    start = time.time()
-    done = False
-    while not done and time.time() - start < timeout:
-        try:
-            e = None
-            payload(*args, **kwargs)
-            done = True
-        except AssertionError as e:
-            time.sleep(interval)
-    if e:
-        raise e
-
-
-# -----------------------------------------------------------------------------
-def testargs(value=''):
-    """
-    Cache value and return it
-    """
-    try:
-        rval = testargs._value
-    except AttributeError:
-        testargs._value = value
-        rval = testargs._value
-
-    if value != '':
-        testargs._value = value
-
-    return rval
-
-
-# -----------------------------------------------------------------------------
-def list_tests(a, final, testlist):
-    """
-    Print a list of tests
-    """
-    if len(a) <= 1:
-        for c in testlist:
-            print c
-            if final != '' and final in c:
-                break
-    else:
-        for arg in a[1:]:
-            for c in testlist:
-                if arg in c:
-                    print c
-                if final != '' and final in c:
-                    break
-
-
-# -----------------------------------------------------------------------------
 def rm_cov_warn(string):
     """
     Return the input string with the coverage warning ('Coverage.py warning: no
@@ -388,16 +285,10 @@ class HelpedTestCase(unittest.TestCase):
         rval = self.tmpdir(basename)
         return rval
 
-    # -------------------------------------------------------------------------
-    def plugin_dir(self):
-        """
-        Return the plugin dir for this test
-        """
-        return self.tmpdir("plugins")
-
     # ------------------------------------------------------------------------
     def write_cfg_file(self, fname, cfgdict, includee=False):
         """
+        !@! too hpssic specific, duplicates crawl_write
         Write a config file for testing. Put the 'crawler' section first.
         Complain if the 'crawler' section is not present.
         """
@@ -414,22 +305,3 @@ class HelpedTestCase(unittest.TestCase):
 
         with open(fname, 'w') as f:
             cfobj.write(f)
-
-
-# -----------------------------------------------------------------------------
-def show_stdout(value=None):
-    """
-    Return value of global value show_stdout. Optionally set it if
-    value is specified. If it is not set, the default return value is False.
-    """
-    global show_output
-    try:
-        rval = show_output
-    except:
-        show_output = False
-        rval = show_output
-
-    if value is not None:
-        show_output = value
-
-    return rval

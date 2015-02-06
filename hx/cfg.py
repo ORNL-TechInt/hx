@@ -120,7 +120,7 @@ def defaults():
 # ------------------------------------------------------------------------------
 def get_config(cfname='', reset=False, soft=False):
     """
-    @DEPRECATED@
+    !@! @DEPRECATED@
     Open the config file based on cfname, $CRAWL_CONF, or the default, in that
     order. Construct a config object, cache it, and return it. Subsequent
     calls will retrieve the cached object unless reset=True, in which case the
@@ -311,16 +311,6 @@ def log(*args, **kwargs):
         return log._logger
     else:
         return None
-
-
-# ------------------------------------------------------------------------------
-def pid_dir():
-    """
-    Return the path to a directory for storing pid files. We expect it to be in
-    the configuration but provide a hard coded default in case it is not.
-    """
-    cfg = add_config()
-    return cfg.get_d('crawler', 'pid_dir', msg.default_piddir)
 
 
 # ------------------------------------------------------------------------------
@@ -793,6 +783,10 @@ class config(ConfigParser.ConfigParser):
     # -------------------------------------------------------------------------
     def crawl_write(self, fp):
         """
+        !@! too hpssic-oriented, should be cfg_write() with no ordering and no
+        errors for missing sections
+        !@! needs testing
+
         Write the config material to fp with the 'crawler' section first. fp
         must be an already open file descriptor. If there is no 'crawler'
         section, raise a NoSectionError.

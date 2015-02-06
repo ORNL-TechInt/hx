@@ -1012,7 +1012,7 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
     # -------------------------------------------------------------------------
     def test_cc_log_0100(self):
         """
-        The '+ 2' added to f_lineno just before logging the message is the
+        The '+ 4' added to f_lineno just before logging the message is the
         number of lines from where f_lineno reference is to where the log call
         actually happens. If they move relative to each other, this value will
         have to be updated.
@@ -1853,29 +1853,6 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
         self.expected(365*24*3600, obj.map_time_unit('y'))
         self.expected(365*24*3600, obj.map_time_unit('year'))
         self.expected(365*24*3600, obj.map_time_unit('years'))
-
-    # --------------------------------------------------------------------------
-    def test_piddir_in_cfg(self):
-        """
-        Test hx.cfg.pid_dir() with option 'pid_dir' in the config
-        """
-        xdict = copy.deepcopy(self.cdict)
-        exp = self.tmpdir('test_piddir')
-        xdict['crawler']['pid_dir'] = exp
-        cfg = hx.cfg.add_config(close=True, dct=xdict)
-        self.expected(exp, hx.cfg.pid_dir())
-
-    # --------------------------------------------------------------------------
-    def test_piddir_nin_cfg(self):
-        """
-        Test hx.cfg.pid_dir() with option 'pid_dir' not in the config
-        """
-        xdict = copy.deepcopy(self.cdict)
-        exp = hx.msg.default_piddir
-        if 'pid_dir' in xdict['crawler']:
-            del xdict['crawler']['pid_dir']
-        cfg = hx.cfg.add_config(close=True, dct=xdict)
-        self.expected(exp, hx.cfg.pid_dir())
 
     # --------------------------------------------------------------------------
     def test_quiet_time_bound_mt(self):
