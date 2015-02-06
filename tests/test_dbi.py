@@ -360,7 +360,7 @@ class DBI_in_Base(object):
         """
         self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
-                             hx.msg.valid_dbtype,
+                             hx.msg.dbtype_required,
                              hx.dbi.DBI)
 
     # -------------------------------------------------------------------------
@@ -2195,8 +2195,8 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_no_hostname(self):
         """
-        DBImysqlTest: Called with a non-sqlite dbtype, dbname, and tbl_prefix but no
-        hostname (or cfg containing one), the DBI ctor should throw an
+        DBImysqlTest: Called with a non-sqlite dbtype, dbname, and tbl_prefix
+        but no hostname (or cfg containing one), the DBI ctor should throw an
         exception
         """
         self.dbgfunc()
@@ -2211,8 +2211,8 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_no_password(self):
         """
-        DBImysqlTest: Called with a non-sqlite dbtype, dbname, and tbl_prefix but no
-        password (or cfg containing one), the DBI ctor should throw an
+        DBImysqlTest: Called with a non-sqlite dbtype, dbname, and tbl_prefix
+        but no password (or cfg containing one), the DBI ctor should throw an
         exception
         """
         self.dbgfunc()
@@ -2229,8 +2229,8 @@ class DBImysqlTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_no_username(self):
         """
-        DBImysqlTest: Called with a non-sqlite dbtype, dbname, and tbl_prefix but no
-        username (or cfg containing one), the DBI ctor should throw an
+        DBImysqlTest: Called with a non-sqlite dbtype, dbname, and tbl_prefix
+        but no username (or cfg containing one), the DBI ctor should throw an
         exception
         """
         self.dbgfunc()
@@ -2416,8 +2416,8 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_bad_dbtype(self):
         """
-        DBIsqliteTest: If the DBI ctor is called with a dbtype other than one of the
-        known ones, it is expected to throw an exception
+        DBIsqliteTest: If the DBI ctor is called with a dbtype other than one
+        of the known ones, it is expected to throw an exception
         """
         self.dbgfunc()
         self.assertRaisesRegex(hx.dbi.DBIerror,
@@ -2433,8 +2433,8 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_cfg_nosection(self):
         """
-        DBIsqliteTest: If the DBI ctor is called with something other than a config
-        object in argv[0], it is expected to throw an exception
+        DBIsqliteTest: If the DBI ctor is called with something other than a
+        config object in argv[0], it is expected to throw an exception
         """
         self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -2534,8 +2534,8 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_no_tbl_prefix(self):
         """
-        DBIsqliteTest: Called with a dbtype and dbname but no tbl_prefix (or cfg
-        containing one), the DBI ctor should throw an exception
+        DBIsqliteTest: Called with a dbtype and dbname but no tbl_prefix (or
+        cfg containing one), the DBI ctor should throw an exception
         """
         self.dbgfunc()
         self.assertRaisesMsg(hx.dbi.DBIerror,
@@ -2558,8 +2558,8 @@ class DBIsqliteTest(DBI_in_Base, DBI_out_Base, DBITestRoot):
     # -------------------------------------------------------------------------
     def test_ctor_sqlite(self):
         """
-        DBIsqliteTest: With a config object specifying sqlite as the database type,
-        DBI should instantiate itself with an internal DBIsqlite object.
+        DBIsqliteTest: With a config object specifying sqlite as the database
+        type, DBI should instantiate itself with an internal DBIsqlite object.
 
         Note: this test is about verifying that DBI does the right thing based
         on the configuration it gets, not anything particular about sqlite.
