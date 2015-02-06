@@ -401,7 +401,7 @@ def dispatch_help(mod, prefix, cmd=None):
             try:
                 hstr = func.__doc__.split("\n")[0]
             except AttributeError:
-                raise HpssicError(
+                raise HXerror(
                     "Function '%s' seems to be missing a docstring" % fname)
             print "    " + hstr
         print("")
@@ -456,7 +456,7 @@ def epoch(ymdhms):
             else:
                 err = ("The date '%s' does not match any of the formats: %s" %
                        (ymdhms, fmts))
-                raise HpssicError(err)
+                raise HXerror(err)
 
     return rval
 
@@ -542,7 +542,7 @@ def lsp_parse(lspout):
             break
 
     if [] == result:
-        raise HpssicError(MSG.lsp_output_not_found)
+        raise HXerror(MSG.lsp_output_not_found)
 
     x = line.split("\t")
     itype = pop0(x)        # 'FILE' or 'DIRECTORY'
@@ -551,7 +551,7 @@ def lsp_parse(lspout):
     elif itype == 'DIRECTORY':
         itype = 'd'
     else:
-        raise HpssicError(MSG.lsp_invalid_file_type)
+        raise HXerror(MSG.lsp_invalid_file_type)
     iname = pop0(x)        # name of file or dir
     pop0(x)
     pop0(x)
@@ -893,5 +893,3 @@ class HXerror(Exception):
         Return the value as a string
         """
         return repr(self.value)
-
-HpssicError = HXerror

@@ -374,7 +374,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         self.expected(1388635200, U.epoch("2014.0101.23"))
         self.expected(1388552400, U.epoch("2014.0101"))
         self.expected(1388552399, U.epoch("1388552399"))
-        self.assertRaisesMsg(U.HpssicError,
+        self.assertRaisesMsg(U.HXerror,
                              "The date '' does not match any of the formats:",
                              U.epoch,
                              "")
@@ -575,7 +575,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
                 '51(tpb) Copies: 1 Firewall: off [hsi.4.0.1.3 Wed Jun 12 10:0',
                 '3:13 EDT 2013] \r\n\r\rO:[/home/tpb']
         td_s = ''.join(td_l)
-        self.assertRaisesMsg(U.HpssicError,
+        self.assertRaisesMsg(U.HXerror,
                              MSG.lsp_output_not_found,
                              U.lsp_parse,
                              td_s)
@@ -588,7 +588,7 @@ class UtilTest(hx.testhelp.HelpedTestCase):
         self.dbgfunc()
         td_l = ["xxx", "DIRECTORY", "/home/tpb/corefiles"]
         td_s = "\t".join(td_l)
-        self.assertRaisesMsg(U.HpssicError,
+        self.assertRaisesMsg(U.HXerror,
                              MSG.lsp_invalid_file_type,
                              U.lsp_parse,
                              td_s)

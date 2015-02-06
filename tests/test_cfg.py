@@ -794,7 +794,7 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
         self.expected(388, obj.get_time('crawler', 'dumpling', 388))
         self.expected(47, obj.get_time('crawler', 'strawberry', 47))
         self.expected(17.324, obj.get_time('crawler', 'beeswax', 17.324))
-        self.assertRaisesMsg(U.HpssicError,
+        self.assertRaisesMsg(U.HXerror,
                              hx.msg.default_int_float,
                              obj.get_time,
                              'crawler',
@@ -811,7 +811,7 @@ class cfg_Test(hx.testhelp.HelpedTestCase):
         self.expected(82, obj.get_time('crawlerfoo', 'heartbeat', 82))
         self.expected(19, obj.get_time('crawlerfoo', 'frequency', 19))
         self.expected(17.324, obj.get_time('crawlerfoo', 'beeswax', 17.324))
-        self.assertRaisesMsg(U.HpssicError,
+        self.assertRaisesMsg(U.HXerror,
                              hx.msg.default_int_float,
                              obj.get_time,
                              'crawlerfoo',

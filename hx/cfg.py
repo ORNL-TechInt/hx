@@ -97,7 +97,7 @@ def add_config(filename=None,
          - use --cfg to specify a configuration file on the command line.
         """ % (default_filename, default_filename, env))
     elif not os.access(filename, os.R_OK):
-        raise HpssicError("%s is not readable" % filename)
+        raise HXerror("%s is not readable" % filename)
 
     rval = defaults()
     rval.read(filename)
@@ -456,7 +456,7 @@ class config(ConfigParser.ConfigParser):
                 rval = defval
                 # log(str(e) + '; using default value %f' % defval)
             elif defval is not None:
-                raise U.HpssicError(msg.default_int_float)
+                raise U.HXerror(msg.default_int_float)
             else:
                 exc.message += " in %s" % self.filename
                 raise
