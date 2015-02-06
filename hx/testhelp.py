@@ -26,7 +26,6 @@ import shutil
 import sys
 import time
 import unittest
-import util
 import util as U
 
 
@@ -164,12 +163,12 @@ class HelpedTestCase(unittest.TestCase):
 
         if type(actual) == list:
             if type(exprgx) == str:
-                self.assertTrue(any([util.rgxin(exprgx, x) for x in actual]),
+                self.assertTrue(any([U.rgxin(exprgx, x) for x in actual]),
                                 msg % (exprgx, actual))
             else:
                 self.assertTrue(exprgx in actual, msg % (exprgx, actual))
         else:
-            self.assertTrue(util.rgxin(exprgx, actual), msg % (exprgx, actual))
+            self.assertTrue(U.rgxin(exprgx, actual), msg % (exprgx, actual))
 
     # -------------------------------------------------------------------------
     def unexpected(self, expval, actual):
@@ -221,12 +220,12 @@ class HelpedTestCase(unittest.TestCase):
 
         if type(actual) == list:
             if type(exprgx) == str:
-                self.assertFalse(all([util.rgxin(exprgx, x) for x in actual]),
+                self.assertFalse(all([U.rgxin(exprgx, x) for x in actual]),
                                  msg % (exprgx, actual))
             else:
                 self.assertFalse(exprgx in actual, msg % (exprgx, actual))
         else:
-            self.assertFalse(util.rgxin(exprgx, actual),
+            self.assertFalse(U.rgxin(exprgx, actual),
                              msg % (exprgx, actual))
 
     # -------------------------------------------------------------------------

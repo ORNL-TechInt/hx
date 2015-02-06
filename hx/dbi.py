@@ -10,7 +10,7 @@ import sqlite3
 import string
 import sys
 import time
-import util
+import util as U
 import warnings
 
 try:
@@ -1299,7 +1299,7 @@ if db2_available:
                 self.tbl_prefix = self.tbl_prefix.rstrip('.') + '.'
 
             cfobj = cfg.add_config()
-            util.env_update(cfobj)
+            U.env_update(cfobj)
             dbn = cfobj.get(cfobj.db_section(), self.dbname)
             cxnstr = ("database=%s;" % dbn +
                       "hostname=%s;" % self.hostname +

@@ -29,7 +29,6 @@ import string
 import StringIO
 import sys
 import time
-import util
 import util as U
 import warnings
 
@@ -221,7 +220,7 @@ def new_logger(logpath='', cfg=None):
 
     rval = logging.getLogger('hpssic')
     rval.setLevel(logging.INFO)
-    host = util.hostname()
+    host = U.hostname()
 
     for h in rval.handlers:
         h.close()
@@ -238,10 +237,10 @@ def new_logger(logpath='', cfg=None):
         backupCount = 5
         archdir = U.pathjoin(U.dirname(final_logpath), 'hpss_log_archive')
 
-    fh = util.ArchiveLogfileHandler(final_logpath,
-                                    maxBytes=maxBytes,
-                                    backupCount=backupCount,
-                                    archdir=archdir)
+    fh = U.ArchiveLogfileHandler(final_logpath,
+                                 maxBytes=maxBytes,
+                                 backupCount=backupCount,
+                                 archdir=archdir)
 
     strfmt = "%" + "(asctime)s [%s] " % host + '%' + "(message)s"
     fmt = logging.Formatter(strfmt, datefmt="%Y.%m%d %H:%M:%S")
@@ -409,7 +408,7 @@ class config(ConfigParser.ConfigParser):
         """
         try:
             spec = self.get(section, option)
-            rval = util.scale(spec)
+            rval = U.scale(spec)
         except ConfigParser.NoOptionError as e:
             if default is not None:
                 rval = default
@@ -682,7 +681,7 @@ class config(ConfigParser.ConfigParser):
             self._qt_list = []
             if self.has_option('crawler', 'quiet_time'):
                 spec = self.get('crawler', 'quiet_time')
-                for ispec in util.csv_list(spec):
+                for ispec in U.csv_list(spec):
                     self._qt_list.append(self.qt_parse(ispec))
 
         for x in self._qt_list:
@@ -696,7 +695,7 @@ class config(ConfigParser.ConfigParser):
             elif x['iter'] == 24 * 3600.0:
                 # it's a time range
 
-                db = util.daybase(when)
+                db = U.daybase(when)
                 low = db + x['lo']
                 high = db + x['hi']
                 dz = db + 24 * 3600.0
