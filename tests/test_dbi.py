@@ -2960,8 +2960,6 @@ class DBIdb2Test(DBI_in_Base, DBITestRoot):
         the table.
         """
         self.dbgfunc()
-        hx.cfg.add_config(filename='hx_test.cfg', close=True)
-        hx.cfg.add_config(filename='db2.cfg')
         db = self.DBI(dbname='sub')
         rows = db.select(table='bitfile',
                          fields=['max(bfid) as mbf',
