@@ -143,7 +143,7 @@ def get_config(cfname='', reset=False, soft=False):
             return None
         if cfname == '':
             envval = os.getenv('CRAWL_CONF')
-            if None != envval:
+            if envval is not None:
                 cfname = envval
 
         if cfname == '':
