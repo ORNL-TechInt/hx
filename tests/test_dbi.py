@@ -533,7 +533,6 @@ class DBI_in_Base(object):
     # -------------------------------------------------------------------------
     def test_select_l_int(self):
         """
-        !@! use expected_in
         DBI_in_Base: select with int passed for *limit* should retrieve the
         specified number of records
         """
@@ -546,14 +545,11 @@ class DBI_in_Base(object):
         self.expected(3, len(rows[0]))
         self.expected(rlim, len(rows))
         for tup in self.testdata[0:int(rlim)]:
-            self.assertTrue(tup in rows,
-                            "Expected %s in %s but it's not there" %
-                            (str(tup), hx.util.line_quote(rows)))
+            self.expected_in(tup, rows)
 
     # -------------------------------------------------------------------------
     def test_select_l_float(self):
         """
-        !@! use expected_in
         DBI_in_Base: select with float passed for *limit* should convert the
         float to an int (without rounding) and use it
         """
@@ -566,9 +562,7 @@ class DBI_in_Base(object):
         self.expected(3, len(rows[0]))
         self.expected(int(rlim), len(rows))
         for tup in self.testdata[0:int(rlim)]:
-            self.assertTrue(tup in rows,
-                            "Expected %s in %s but it's not there" %
-                            (str(tup), hx.util.line_quote(rows)))
+            self.expected_in(tup, rows)
 
     # -------------------------------------------------------------------------
     def test_select_mtf(self):
@@ -1231,21 +1225,14 @@ class DBI_out_Base(object):
     # -------------------------------------------------------------------------
     def test_ctor_dbtype_ok(self):
         """
-        !@! use expected_in?
         DBI_out_Base: With dbtype value 'sqlite' or 'mysql', constructor should
         be okay
         """
         self.dbgfunc()
         db = self.DBI()
-        self.assertTrue(hasattr(db, "_dbobj"),
-                        "%s: Expected attribute '_dbobj', not present" %
-                        self.dbtype)
-        self.assertTrue(hasattr(db, 'closed'),
-                        "%s: Expected attribute 'closed', not present" %
-                        self.dbtype)
-        self.assertTrue(hasattr(db._dbobj, 'dbh'),
-                        "%s: Expected attribute 'dbh', not present" %
-                        self.dbtype)
+        self.expected_in("_dbobj", dir(db))
+        self.expected_in('closed', dir(db))
+        self.expected_in('dbh', dir(db._dbobj))
         db.close()
 
     # -------------------------------------------------------------------------
