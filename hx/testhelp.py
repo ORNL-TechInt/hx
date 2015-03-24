@@ -167,6 +167,8 @@ class HelpedTestCase(unittest.TestCase):
                                 msg % (exprgx, actual))
             else:
                 self.assertTrue(exprgx in actual, msg % (exprgx, actual))
+        elif type(exprgx) == tuple:
+            self.assertTrue(exprgx in actual, msg % (exprgx, actual))
         else:
             self.assertTrue(U.rgxin(exprgx, actual), msg % (exprgx, actual))
 
