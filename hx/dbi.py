@@ -452,18 +452,18 @@ class DBIsqlite(DBI_abstract):
         DBIsqlite: Sqlite ignores pos if it's set and does not support dropcol.
         """
         if type(table) != str:
-            raise DBIerror(msg.alter_table_string,
+            raise DBIerror(msg.tbl_name_str_S % U.my_name(),
                            dbname=self.dbname)
         elif table == '':
-            raise DBIerror("On alter(), table name must not be empty",
+            raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                            dbname=self.dbname)
         elif dropcol is not None:
-            raise DBIerror("SQLite does not support dropping columns",
+            raise DBIerror(msg.unsupp_dropcol_sqlite,
                            dbname=self.dbname)
         elif addcol is None:
             raise DBIerror("ALTER requires an action")
         elif addcol.strip() == "":
-            raise DBIerror("On alter(), addcol must not be empty")
+            raise DBIerror(msg.alter_addcol_not_empty)
         elif any([x in addcol for x in ['"', "'", ';', '=']]):
             raise DBIerror("Invalid addcol argument")
 
@@ -497,16 +497,16 @@ class DBIsqlite(DBI_abstract):
         """
 
         if type(fields) != list:
-            raise DBIerror("On create(), fields must be a list",
+            raise DBIerror(msg.fields_list_S % U.my_name(),
                            dbname=self.dbname)
         elif fields == []:
-            raise DBIerror("On create(), fields must not be empty",
+            raise DBIerror(msg.fields_notmt_S % U.my_name(),
                            dbname=self.dbname)
         if type(table) != str:
-            raise DBIerror(msg.create_table_string,
+            raise DBIerror(msg.tbl_name_str_S % U.my_name(),
                            dbname=self.dbname)
         elif table == '':
-            raise DBIerror("On create(), table name must not be empty",
+            raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                            dbname=self.dbname)
 
         # Construct and run the create statement
@@ -538,21 +538,21 @@ class DBIsqlite(DBI_abstract):
         """
         # Handle invalid arguments
         if type(table) != str:
-            raise DBIerror("On delete(), table name must be a string",
+            raise DBIerror(msg.tbl_name_str_S % U.my_name(),
                            dbname=self.dbname)
         elif table == '':
-            raise DBIerror("On delete(), table name must not be empty",
+            raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                            dbname=self.dbname)
         elif type(where) != str:
-            raise DBIerror("On delete(), where clause must be a string",
+            raise DBIerror(msg.where_str_S % U.my_name(),
                            dbname=self.dbname)
         elif type(data) != tuple:
-            raise DBIerror("On delete(), data must be a tuple",
+            raise DBIerror(msg.data_tuple_S % U.my_name(),
                            dbname=self.dbname)
         elif '?' not in where and data != ():
-            raise DBIerror("Data would be ignored", dbname=self.dbname)
+            raise DBIerror(msg.data_ignored, dbname=self.dbname)
         elif '?' in where and data == ():
-            raise DBIerror("Criteria are not fully specified",
+            raise DBIerror(msg.crit_incomplete,
                            dbname=self.dbname)
 
         # Build and run the statement
@@ -597,10 +597,10 @@ class DBIsqlite(DBI_abstract):
         """
         # Handle bad arguments
         if type(table) != str:
-            raise DBIerror("On drop(), table name must be a string",
+            raise DBIerror(msg.tbl_name_str_S % "drop",
                            dbname=self.dbname)
         elif table == '':
-            raise DBIerror("On drop(), table name must not be empty",
+            raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                            dbname=self.dbname)
 
         # Construct and run the drop statement
@@ -619,22 +619,21 @@ class DBIsqlite(DBI_abstract):
         """
         # Handle any bad arguments
         if type(table) != str:
-            raise DBIerror("On insert(), table name must be a string",
+            raise DBIerror(msg.tbl_name_str_S % U.my_name(),
                            dbname=self.dbname)
         elif table == '':
-            raise DBIerror("On insert(), table name must not be empty",
+            raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                            dbname=self.dbname)
         elif type(fields) != list:
-            raise DBIerror("On insert(), fields must be a list",
+            raise DBIerror(msg.fields_list_S % U.my_name(),
                            dbname=self.dbname)
         elif fields == []:
-            raise DBIerror("On insert(), fields list must not be empty",
-                           dbname=self.dbname)
+            raise DBIerror(msg.fields_notmt, dbname=self.dbname)
         elif type(data) != list:
-            raise DBIerror("On insert(), data must be a list",
+            raise DBIerror(msg.data_list_S % U.my_name(),
                            dbname=self.dbname)
         elif data == []:
-            raise DBIerror("On insert(), data list must not be empty",
+            raise DBIerror(msg.data_list_notmt,
                            dbname=self.dbname)
         elif type(ignore) != bool:
             raise DBIerror(msg.insert_ignore_bool, dbname=self.dbname)
@@ -668,35 +667,33 @@ class DBIsqlite(DBI_abstract):
         """
         # Handle invalid arguments
         if type(table) != str:
-            raise DBIerror("On select(), table name must be a string",
+            raise DBIerror(msg.tbl_name_str_S % U.my_name(),
                            dbname=self.dbname)
         elif table == '':
-            raise DBIerror("On select(), table name must not be empty",
+            raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                            dbname=self.dbname)
         elif type(fields) != list:
-            raise DBIerror("On select(), fields must be a list",
+            raise DBIerror(msg.fields_list_S % U.my_name(),
                            dbname=self.dbname)
         elif fields == []:
             raise DBIerror("Wildcard selects are not supported." +
                            " Please supply a list of fields.",
                            dbname=self.dbname)
         elif type(where) != str:
-            raise DBIerror("On select(), where clause must be a string",
+            raise DBIerror(msg.where_str_S % U.my_name(),
                            dbname=self.dbname)
         elif type(data) != tuple:
-            raise DBIerror("On select(), data must be a tuple",
-                           dbname=self.dbname)
+            raise DBIerror(msg.data_tuple_S % U.my_name(), dbname=self.dbname)
         elif type(groupby) != str:
-            raise DBIerror("On select(), groupby clause must be a string",
-                           dbname=self.dbname)
+            raise DBIerror(msg.select_gb_str, dbname=self.dbname)
         elif type(orderby) != str:
-            raise DBIerror("On select(), orderby clause must be a string",
+            raise DBIerror(msg.select_nso,
                            dbname=self.dbname)
         elif '?' not in where and data != ():
-            raise DBIerror("Data would be ignored",
+            raise DBIerror(msg.data_ignored,
                            dbname=self.dbname)
         elif limit is not None and type(limit) not in [int, float]:
-            raise DBIerror("On select(), limit must be an int")
+            raise DBIerror(msg.select_l_nint)
 
         # Build and run the select statement
         try:
@@ -773,28 +770,28 @@ class DBIsqlite(DBI_abstract):
         """
         # Handle invalid arguments
         if type(table) != str:
-            raise DBIerror("On update(), table name must be a string",
+            raise DBIerror(msg.tbl_name_str_S % U.my_name(),
                            dbname=self.dbname)
         elif table == '':
-            raise DBIerror("On update(), table name must not be empty",
+            raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                            dbname=self.dbname)
         elif type(where) != str:
-            raise DBIerror("On update(), where clause must be a string",
+            raise DBIerror(msg.where_str_S % U.my_name(),
                            dbname=self.dbname)
         elif type(fields) != list:
-            raise DBIerror("On update(), fields must be a list",
+            raise DBIerror(msg.fields_list_S % U.my_name(),
                            dbname=self.dbname)
         elif fields == []:
-            raise DBIerror("On update(), fields must not be empty",
+            raise DBIerror(msg.fields_notmt_S % U.my_name(),
                            dbname=self.dbname)
         elif type(data) != list:
-            raise DBIerror("On update(), data must be a list of tuples",
+            raise DBIerror(msg.data_list_S % U.my_name(),
                            dbname=self.dbname)
         elif data == []:
-            raise DBIerror("On update(), data must not be empty",
+            raise DBIerror(msg.data_notmt,
                            dbname=self.dbname)
         elif '"?"' in where or "'?'" in where:
-            raise DBIerror("Parameter placeholders should not be quoted")
+            raise DBIerror(msg.param_noquote)
 
         # Build and run the update statement
         try:
@@ -875,16 +872,16 @@ if mysql_available:
             """
             cmd = ''
             if type(table) != str:
-                raise DBIerror("On alter(), table name must be a string",
+                raise DBIerror(msg.tbl_name_str_S % U.my_name(),
                                dbname=self.dbname)
             elif table == '':
-                raise DBIerror("On alter(), table name must not be empty",
+                raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                                dbname=self.dbname)
             elif addcol is not None and dropcol is not None:
                 raise DBIerror(msg.alter_mutual_excl, dbname=self.dbname)
             elif addcol is not None:
                 if addcol.strip() == '':
-                    raise DBIerror("On alter(), addcol must not be empty",
+                    raise DBIerror(msg.alter_addcol_not_empty,
                                    dbname=self.dbname)
                 if any([x in addcol for x in ['"', "'", ';', '=']]):
                     raise DBIerror("Invalid addcol argument")
@@ -930,16 +927,16 @@ if mysql_available:
             """
             # Handle bad arguments
             if type(fields) != list:
-                raise DBIerror("On create(), fields must be a list",
+                raise DBIerror(msg.fields_list_S % U.my_name(),
                                dbname=self.dbname)
             elif fields == []:
-                raise DBIerror("On create(), fields must not be empty",
+                raise DBIerror(msg.fields_notmt_S % U.my_name(),
                                dbname=self.dbname)
             if type(table) != str:
-                raise DBIerror("On create(), table name must be a string",
+                raise DBIerror(msg.tbl_name_str_S % U.my_name(),
                                dbname=self.dbname)
             elif table == '':
-                raise DBIerror("On create(), table name must not be empty",
+                raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                                dbname=self.dbname)
 
             # Construct and run the create statement
@@ -974,21 +971,21 @@ if mysql_available:
             """
             # Handle invalid arguments
             if type(table) != str:
-                raise DBIerror("On delete(), table name must be a string",
+                raise DBIerror(msg.tbl_name_str_S % U.my_name(),
                                dbname=self.dbname)
             elif table == '':
-                raise DBIerror("On delete(), table name must not be empty",
+                raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                                dbname=self.dbname)
             elif type(where) != str:
-                raise DBIerror("On delete(), where clause must be a string",
+                raise DBIerror(msg.where_str_S % U.my_name(),
                                dbname=self.dbname)
             elif type(data) != tuple:
-                raise DBIerror("On delete(), data must be a tuple",
+                raise DBIerror(msg.data_tuple_S % U.my_name(),
                                dbname=self.dbname)
             elif '?' not in where and data != ():
-                raise DBIerror("Data would be ignored", dbname=self.dbname)
+                raise DBIerror(msg.data_ignored, dbname=self.dbname)
             elif '?' in where and data == ():
-                raise DBIerror("Criteria are not fully specified",
+                raise DBIerror(msg.crit_incomplete,
                                dbname=self.dbname)
 
             # Build and run the statement
@@ -1035,10 +1032,10 @@ if mysql_available:
             """
             # Handle bad arguments
             if type(table) != str:
-                raise DBIerror("On drop(), table name must be a string",
+                raise DBIerror(msg.tbl_name_str_S % U.my_name(),
                                dbname=self.dbname)
             elif table == '':
-                raise DBIerror("On drop(), table name must not be empty",
+                raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                                dbname=self.dbname)
 
             # Construct and run the drop statement
@@ -1061,22 +1058,21 @@ if mysql_available:
             """
             # Handle any bad arguments
             if type(table) != str:
-                raise DBIerror("On insert(), table name must be a string",
+                raise DBIerror(msg.tbl_name_str_S % U.my_name(),
                                dbname=self.dbname)
             elif table == '':
-                raise DBIerror("On insert(), table name must not be empty",
+                raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                                dbname=self.dbname)
             elif type(fields) != list:
-                raise DBIerror("On insert(), fields must be a list",
+                raise DBIerror(msg.fields_list_S % U.my_name(),
                                dbname=self.dbname)
             elif fields == []:
-                raise DBIerror("On insert(), fields list must not be empty",
-                               dbname=self.dbname)
+                raise DBIerror(msg.fields_notmt, dbname=self.dbname)
             elif type(data) != list:
-                raise DBIerror("On insert(), data must be a list",
+                raise DBIerror(msg.data_list_S % U.my_name(),
                                dbname=self.dbname)
             elif data == []:
-                raise DBIerror("On insert(), data list must not be empty",
+                raise DBIerror(msg.data_list_notmt,
                                dbname=self.dbname)
             elif type(ignore) != bool:
                 raise DBIerror(msg.insert_ignore_bool, dbname=self.dbname)
@@ -1116,35 +1112,34 @@ if mysql_available:
             """
             # Handle invalid arguments
             if type(table) != str:
-                raise DBIerror("On select(), table name must be a string",
+                raise DBIerror(msg.tbl_name_str_S % U.my_name(),
                                dbname=self.dbname)
             elif table == '':
-                raise DBIerror("On select(), table name must not be empty",
+                raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                                dbname=self.dbname)
             elif type(fields) != list:
-                raise DBIerror("On select(), fields must be a list",
+                raise DBIerror(msg.fields_list_S % U.my_name(),
                                dbname=self.dbname)
             elif fields == []:
                 raise DBIerror("Wildcard selects are not supported." +
                                " Please supply a list of fields.",
                                dbname=self.dbname)
             elif type(where) != str:
-                raise DBIerror("On select(), where clause must be a string",
+                raise DBIerror(msg.where_str_S % U.my_name(),
                                dbname=self.dbname)
             elif type(data) != tuple:
-                raise DBIerror("On select(), data must be a tuple",
+                raise DBIerror(msg.data_tuple_S % U.my_name(),
                                dbname=self.dbname)
             elif type(groupby) != str:
-                raise DBIerror("On select(), groupby clause must be a string",
-                               dbname=self.dbname)
+                raise DBIerror(msg.select_gb_str, dbname=self.dbname)
             elif type(orderby) != str:
-                raise DBIerror("On select(), orderby clause must be a string",
+                raise DBIerror(msg.select_nso,
                                dbname=self.dbname)
             elif '?' not in where and data != ():
-                raise DBIerror("Data would be ignored",
+                raise DBIerror(msg.data_ignored,
                                dbname=self.dbname)
             elif limit is not None and type(limit) not in [int, float]:
-                raise DBIerror("On select(), limit must be an int")
+                raise DBIerror(msg.select_l_nint)
 
             # Build and run the select statement
             cmd = "select "
@@ -1237,28 +1232,28 @@ if mysql_available:
             """
             # Handle invalid arguments
             if type(table) != str:
-                raise DBIerror("On update(), table name must be a string",
+                raise DBIerror(msg.tbl_name_str_S % U.my_name(),
                                dbname=self.dbname)
             elif table == '':
-                raise DBIerror("On update(), table name must not be empty",
+                raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                                dbname=self.dbname)
             elif type(where) != str:
-                raise DBIerror("On update(), where clause must be a string",
+                raise DBIerror(msg.where_str_S % U.my_name(),
                                dbname=self.dbname)
             elif type(fields) != list:
-                raise DBIerror("On update(), fields must be a list",
+                raise DBIerror(msg.fields_list_S % U.my_name(),
                                dbname=self.dbname)
             elif fields == []:
-                raise DBIerror("On update(), fields must not be empty",
+                raise DBIerror(msg.fields_notmt_S % U.my_name(),
                                dbname=self.dbname)
             elif type(data) != list:
-                raise DBIerror("On update(), data must be a list of tuples",
+                raise DBIerror(msg.data_list_S % U.my_name(),
                                dbname=self.dbname)
             elif data == []:
-                raise DBIerror("On update(), data must not be empty",
+                raise DBIerror(msg.data_notmt,
                                dbname=self.dbname)
             elif '"?"' in where or "'?'" in where:
-                raise DBIerror("Parameter placeholders should not be quoted")
+                raise DBIerror(msg.param_noquote)
 
             # Build and run the update statement
             try:
@@ -1348,7 +1343,7 @@ if db2_available:
             try:
                 q = self.db2_exc_list
             except AttributeError:
-                self.db2_exc_list = ["params bound not matching",
+                self.db2_exc_list = [msg.param_bound,
                                      "SQLSTATE=",
                                      "[IBM][CLI Driver][DB2"]
             rval = False
@@ -1447,32 +1442,31 @@ if db2_available:
                                "a string or a list",
                                dbname=self.dbname)
             elif table == '' or table == []:
-                raise DBIerror("On select(), table name must not be empty",
+                raise DBIerror(msg.tbl_name_notmt_S % U.my_name(),
                                dbname=self.dbname)
             elif type(fields) != list:
-                raise DBIerror("On select(), fields must be a list",
+                raise DBIerror(msg.fields_list_S % U.my_name(),
                                dbname=self.dbname)
             elif fields == []:
                 raise DBIerror("Wildcard selects are not supported." +
                                " Please supply a list of fields.",
                                dbname=self.dbname)
             elif type(where) != str:
-                raise DBIerror("On select(), where clause must be a string",
+                raise DBIerror(msg.where_str_S % U.my_name(),
                                dbname=self.dbname)
             elif type(data) != tuple:
-                raise DBIerror("On select(), data must be a tuple",
+                raise DBIerror(msg.data_tuple_S % U.my_name(),
                                dbname=self.dbname)
             elif type(groupby) != str:
-                raise DBIerror("On select(), groupby clause must be a string",
-                               dbname=self.dbname)
+                raise DBIerror(msg.select_gb_str, dbname=self.dbname)
             elif type(orderby) != str:
-                raise DBIerror("On select(), orderby clause must be a string",
+                raise DBIerror(msg.select_nso,
                                dbname=self.dbname)
             elif '?' not in where and data != ():
-                raise DBIerror("Data would be ignored",
+                raise DBIerror(msg.data_ignored,
                                dbname=self.dbname)
             elif limit is not None and type(limit) not in [int, float]:
-                raise DBIerror("On select(), limit must be an int")
+                raise DBIerror(msg.select_l_nint)
 
             # Build and run the select statement
             try:
