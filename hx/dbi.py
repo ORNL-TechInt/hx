@@ -809,7 +809,16 @@ class DBIsqlite(DBI_abstract):
                            dbname=self.dbname)
 
 
-if mysql_available:
+if not mysql_available:
+    class DBImysql(DBI_abstract):
+        # ---------------------------------------------------------------------
+        @classmethod
+        def arginfo(cls):
+            """
+            Set required and optional arguments for mysql db connections
+            """
+            return {}
+else:
     # -------------------------------------------------------------------------
     class DBImysql(DBI_abstract):
         # ---------------------------------------------------------------------
@@ -1270,7 +1279,17 @@ if mysql_available:
                 self.err_handler(e)
 
 
-if db2_available:
+if not db2_available:
+    # -----------------------------------------------------------------------------
+    class DBIdb2(DBI_abstract):
+        # -------------------------------------------------------------------------
+        @classmethod
+        def arginfo(self):
+            """
+            Set required and optional arguments for db2 connections
+            """
+            return {}
+else:
     # -----------------------------------------------------------------------------
     class DBIdb2(DBI_abstract):
         # -------------------------------------------------------------------------
